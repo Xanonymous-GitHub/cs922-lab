@@ -1,8 +1,8 @@
 #ifndef EXPLICIT_SCHEME_H_
 #define EXPLICIT_SCHEME_H_
 
-#include "InputFile.h"
-#include "Scheme.h"
+#include "InputFile.hpp"
+#include "Scheme.hpp"
 
 class ExplicitScheme : public Scheme {
 private:

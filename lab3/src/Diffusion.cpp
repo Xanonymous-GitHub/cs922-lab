@@ -1,6 +1,6 @@
-#include "Diffusion.h"
+#include "Diffusion.hpp"
 
-#include "ExplicitScheme.h"
+#include "ExplicitScheme.hpp"
 
 #include <cstdlib>
 #include <iostream>

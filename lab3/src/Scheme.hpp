@@ -1,7 +1,7 @@
 #ifndef SCHEME_H_
 #define SCHEME_H_
 
-#include "Mesh.h"
+#include "Mesh.hpp"
 
 class Scheme {
 private:

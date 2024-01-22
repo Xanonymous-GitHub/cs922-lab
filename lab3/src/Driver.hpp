@@ -3,10 +3,10 @@
 
 #include <string>
 
-#include "Diffusion.h"
-#include "InputFile.h"
-#include "Mesh.h"
-#include "VtkWriter.h"
+#include "Diffusion.hpp"
+#include "InputFile.hpp"
+#include "Mesh.hpp"
+#include "VtkWriter.hpp"
 
 class Driver {
 private:

@@ -1,4 +1,4 @@
-#include "VtkWriter.h"
+#include "VtkWriter.hpp"
 
 #include <fstream>
 #include <iostream>

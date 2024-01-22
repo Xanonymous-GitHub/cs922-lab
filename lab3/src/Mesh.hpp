@@ -1,7 +1,7 @@
 #ifndef DIFFUSION_MESH_H_
 #define DIFFUSION_MESH_H_
 
-#include "InputFile.h"
+#include "InputFile.hpp"
 
 class Mesh {
 private:

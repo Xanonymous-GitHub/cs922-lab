@@ -1,4 +1,4 @@
-#include "InputFile.h"
+#include "InputFile.hpp"
 
 #include <cstdlib>
 #include <fstream>

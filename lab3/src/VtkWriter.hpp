@@ -1,7 +1,7 @@
 #ifndef VTKWRITER_H_
 #define VTKWRITER_H_
 
-#include "Mesh.h"
+#include "Mesh.hpp"
 #include <string>
 
 class VtkWriter {

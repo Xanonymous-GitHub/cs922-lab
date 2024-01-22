@@ -1,9 +1,9 @@
 #ifndef DIFFUSION_H_
 #define DIFFUSION_H_
 
-#include "InputFile.h"
-#include "Mesh.h"
-#include "Scheme.h"
+#include "InputFile.hpp"
+#include "Mesh.hpp"
+#include "Scheme.hpp"
 
 #include <vector>
 

@@ -2,8 +2,8 @@
 #include <iostream>
 #include <string>
 
-#include "Driver.h"
-#include "InputFile.h"
+#include "Driver.hpp"
+#include "InputFile.hpp"
 
 int main(int argc, char *argv[]) {
     if (argc != 2) {
