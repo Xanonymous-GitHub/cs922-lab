@@ -27,6 +27,7 @@
         "main.C": "cpp",
         "Mesh.C": "cpp",
         "VtkWriter.C": "cpp",
-        "string": "cpp"
+        "string": "cpp",
+        "iostream": "cpp"
     }
 }
