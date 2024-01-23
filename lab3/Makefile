@@ -37,7 +37,7 @@ $(BINARY) : $(OBJS)
 	$(maketargetdir)
 	$(LD) $(LDFLAGS) $(CXXFLAGS_STANDARD) -o $@ $^
 
-$(BUILDDIR)/%.o : $(SRCDIR)/%.C
+$(BUILDDIR)/%.o : $(SRCDIR)/%.cpp
 	@echo compiling $<
 	$(maketargetdir)
 	$(CXX) $(CXXFLAGS) $(CXXFLAGS_STANDARD) $(CXXINCLUDES) -c -o $@ $<
