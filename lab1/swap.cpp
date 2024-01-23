@@ -1,10 +1,9 @@
 #include <iostream>
 #include <memory>
+#include <utility>
 
 void swap(int *a, int *b) {
-    *a ^= *b;
-    *b ^= *a;
-    *a ^= *b;
+    std::swap(*a, *b);
 }
 
 void show_value_and_address(const int &value) {
