@@ -4,7 +4,6 @@
 
 Driver::Driver(const InputFile *input, const std::string &pname)
     : problem_name(pname) {
-
     std::cout << "+++++++++++++++++++++" << std::endl;
     std::cout << "  Running deqn v0.1  " << std::endl;
 #ifdef DEBUG
@@ -48,7 +47,6 @@ Driver::~Driver() {
 }
 
 void Driver::run() {
-
     int step = 0;
     double t_current;
 

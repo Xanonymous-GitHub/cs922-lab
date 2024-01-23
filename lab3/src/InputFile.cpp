@@ -6,7 +6,6 @@
 #include <sstream>
 
 InputFile::InputFile(const char *filename) {
-
     std::ifstream ifs(filename);
 
     if (!ifs.good()) {
@@ -83,7 +82,6 @@ std::string InputFile::getString(
 std::vector<double> InputFile::getDoubleList(
     const std::string &name,
     const std::vector<double> &dfault) const {
-
     std::map<std::string, std::string>::const_iterator itr = pairs.find(name);
 
     if (itr == pairs.end())

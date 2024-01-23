@@ -1,8 +1,9 @@
 #ifndef VTKWRITER_H_
 #define VTKWRITER_H_
 
-#include "Mesh.hpp"
 #include <string>
+
+#include "Mesh.hpp"
 
 class VtkWriter {
 private:

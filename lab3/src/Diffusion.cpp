@@ -1,12 +1,11 @@
 #include "Diffusion.hpp"
 
-#include "ExplicitScheme.hpp"
-
 #include <cstdlib>
 #include <iostream>
 
-Diffusion::Diffusion(const InputFile *input, Mesh *m) : mesh(m) {
+#include "ExplicitScheme.hpp"
 
+Diffusion::Diffusion(const InputFile *input, Mesh *m) : mesh(m) {
     std::string scheme_str = input->getString("scheme", "explicit");
 
     if (scheme_str.compare("explicit") == 0) {

@@ -62,7 +62,6 @@ void ExplicitScheme::diffuse(double dt) {
 
     for (int k = y_min; k <= y_max; k++) {
         for (int j = x_min; j <= x_max; j++) {
-
             int n1 = POLY2(j, k, x_min - 1, y_min - 1, nx);
             int n2 = POLY2(j - 1, k, x_min - 1, y_min - 1, nx);
             int n3 = POLY2(j + 1, k, x_min - 1, y_min - 1, nx);
