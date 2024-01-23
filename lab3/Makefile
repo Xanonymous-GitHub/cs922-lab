@@ -8,17 +8,17 @@ HDRS := $(wildcard $(SRCDIR)/*.hpp)
 CSRCS := $(wildcard $(SRCDIR)/*.cpp)
 FSRCS += $(wildcard $(SRCDIR)/fortran/*.f90)
 
-OBJS := $(CSRCS:$(SRCDIR)/%.C=$(BUILDDIR)/%.o)
+OBJS := $(CSRCS:$(SRCDIR)/%.cpp=$(BUILDDIR)/%.o)
 OBJS += $(FSRCS:$(SRCDIR)/fortran/%.f90=$(BUILDDIR)/%.o)
 
 BINARY := $(BUILDDIR)/$(PRODUCT)
 
 # gcc flags:
-CXX := g++-13
+CXX := clang++
 CXXFLAGS_DEBUG := -g -DDEBUG
 CXXFLAGS_OPT := -O3
 CXXFLAGS_OPENMP := -fopenmp
-CXXFLAGS_STANDARD := -std=c++2b
+CXXFLAGS_STANDARD := -std=c++2c
 
 LD := $(CXX)
 
