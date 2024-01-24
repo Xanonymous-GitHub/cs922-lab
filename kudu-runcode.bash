@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 # Function to create a job name and execute a command with `srun`
 function run_job() {
     # Default job name prefix
@@ -28,10 +30,10 @@ function run_job() {
 
     # Check if the executable exists
     if [ -z "$executable" ]; then
-        echo "Error: Executable name is required."
+        echo ">>> Error: Executable name is required."
         return 1
     elif ! [ -f "$executable" ]; then
-        echo "Error: The executable '$executable' does not exist."
+        echo ">>> Error: The executable '$executable' does not exist."
         return 1
     fi
 
