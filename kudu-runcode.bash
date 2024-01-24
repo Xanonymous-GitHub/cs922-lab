@@ -28,10 +28,10 @@ function run_job() {
 
     # Convert the executable path to an absolute path
     if [ -z "$executable" ]; then
-        echo "Error: Executable name is required."
+        echo ">>> Error: Executable name is required."
         return 1
     elif ! executable=$(realpath "$executable"); then
-        echo "Error: The executable '$executable' does not exist or cannot be accessed."
+        echo ">>> Error: The executable '$executable' does not exist or cannot be accessed."
         return 1
     fi
 
@@ -50,12 +50,19 @@ function run_job() {
     } > "$sbatch_file"
 
     # Submit the job
-    echo "Submitting job '$job_name' with executable '$executable'"
+    echo ">>> Submitting job '$job_name' with executable '$executable'"
     sbatch "$sbatch_file"
+
+    # Remove the temporary SBATCH file
+    if [ -f "$sbatch_file" ]; then
+        rm "$sbatch_file"
+        echo ">>> Temporary file '$sbatch_file' removed."
+    fi
 }
 
 # Load the MPI module
 module load cs402-mpi
 
 # Call the function with all passed arguments
+# Note: you can use `--job-name` to specify a custom job name.
 run_job "$@"
