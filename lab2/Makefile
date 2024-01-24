@@ -2,7 +2,7 @@
 CXX := clang++
 
 # Compiler flags
-CXXFLAGS := -O -std=c++2c -fopenmp
+CXXFLAGS := -O -std=c++2b -fopenmp
 
 # Source files - list all .cpp files in the current directory
 SOURCES := $(wildcard *.cpp)
