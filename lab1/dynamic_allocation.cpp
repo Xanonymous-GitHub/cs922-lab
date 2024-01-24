@@ -16,9 +16,9 @@ int main(int argc, char const* argv[]) {
         arr[i++] = std::stoi(input);
     }
 
-    auto it = arr.rbegin();
+    auto it = arr.crbegin();
     it += SIZE - i;
-    for (; it != arr.rend(); ++it) {
+    for (; it != arr.crend(); ++it) {
         std::cout << *it << std::endl;
     }
 
