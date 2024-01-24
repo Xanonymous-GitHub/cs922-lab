@@ -26,14 +26,17 @@ function run_job() {
         job_name="${default_job_prefix}$(date -u +%s | sha256sum | cut -c1-8)"
     fi
 
-    # Convert the executable path to an absolute path
+    # Check if the executable exists
     if [ -z "$executable" ]; then
-        echo ">>> Error: Executable name is required."
+        echo "Error: Executable name is required."
         return 1
-    elif ! executable=$(realpath "$executable"); then
-        echo ">>> Error: The executable '$executable' does not exist or cannot be accessed."
+    elif ! [ -f "$executable" ]; then
+        echo "Error: The executable '$executable' does not exist."
         return 1
     fi
+
+    # Convert the executable path to an absolute path
+    executable=$(realpath "$executable")
 
     # Create a temporary SBATCH file
     sbatch_file="submit.sbatch"
