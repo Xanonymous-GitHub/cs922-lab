@@ -51,6 +51,7 @@ function run_job() {
         echo "sbatch --ntasks-per-node=1"
         echo "sbatch --cpus-per-task=6"
         echo "sbatch --time=00:01:00"
+        echo "module load cs402-mpi"
         echo "srun $executable"
     } > "$sbatch_file"
 
@@ -64,9 +65,6 @@ function run_job() {
         echo ">>> Temporary file '$sbatch_file' removed."
     fi
 }
-
-# Load the MPI module
-module load cs402-mpi
 
 # Call the function with all passed arguments
 # Note: you can use `--job-name` to specify a custom job name.
