@@ -1,3 +1,5 @@
+#include <omp.h>
+
 #include <cmath>
 #include <iomanip>
 #include <iostream>
@@ -15,6 +17,7 @@ int main(int argc, char const* argv[]) {
     double integral = (f(a) + f(b)) / 2.0f;
     double x = static_cast<const double>(a);
 
+    const double start_time = omp_get_wtime();
 #pragma omp parallel for reduction(+ : integral)
     for (long i = 1; i <= n; ++i) {
         x += h;
@@ -22,6 +25,7 @@ int main(int argc, char const* argv[]) {
     }
 
 #pragma omp barrier
+    const double end_time = omp_get_wtime();
 
     integral *= h;
 
@@ -30,6 +34,8 @@ int main(int argc, char const* argv[]) {
         << std::setprecision(16)
         << " trapezoids, estimate: " << integral
         << std::endl;
+
+    std::cout << "Time: " << end_time - start_time << std::endl;
 
     return 0;
 }
