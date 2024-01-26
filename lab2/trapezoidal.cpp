@@ -1,5 +1,5 @@
 #include <cmath>
-#include <format>
+#include <iomanip>
 #include <iostream>
 
 inline constexpr float f(const float& x) noexcept {
@@ -23,7 +23,11 @@ int main(int argc, char const* argv[]) {
 
     integral *= h;
 
-    std::cout << std::format("With n = {} trapezoids, estimate: {}\n", n, integral);
+    std::cout
+        << "With n = " << n
+        << std::setprecision(16)
+        << " trapezoids, estimate: " << integral
+        << std::endl;
 
     return 0;
 }
