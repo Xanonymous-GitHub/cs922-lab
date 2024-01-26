@@ -19,7 +19,7 @@ int main(int argc, char const* argv[]) {
 
     const double start_time = omp_get_wtime();
 
-#pragma omp parallel for reduction(+ : integral) reduction(+ : x)
+#pragma omp parallel for reduction(+ : integral) reduction(+ : x) schedule(static)
     for (long i = 1; i <= n; ++i) {
         x += h;
         integral += f(x);
