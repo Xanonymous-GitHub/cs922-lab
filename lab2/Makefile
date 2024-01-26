@@ -1,8 +1,13 @@
 # Define the compiler
-CXX := clang++
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S), Darwin)
+    CXX := clang++
+else
+    CXX := g++
+endif
 
 # Compiler flags
-CXXFLAGS := -O -std=c++2b -fopenmp
+CXXFLAGS := -O3 -std=c++2a -fopenmp
 
 # Source files - list all .cpp files in the current directory
 SOURCES := $(wildcard *.cpp)
