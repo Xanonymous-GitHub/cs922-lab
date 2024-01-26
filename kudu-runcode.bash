@@ -41,16 +41,17 @@ function run_job() {
     executable=$(realpath "$executable")
 
     # Create a temporary SBATCH file
+    # Note: the annotation of a SBATCH file is `#SBATCH`, a `#` followed by `SBATCH` without any space.
     sbatch_file="submit.sbatch"
     {
         echo "#!/usr/bin/env bash"
-        echo "sbatch --job-name=$job_name"
-        echo "sbatch --account=cs402users"
-        echo "sbatch --partition=cs402-openmp"
-        echo "sbatch --nodes=1"
-        echo "sbatch --ntasks-per-node=1"
-        echo "sbatch --cpus-per-task=6"
-        echo "sbatch --time=00:01:00"
+        echo "#SBATCH --job-name=$job_name"
+        echo "#SBATCH --account=cs402users"
+        echo "#SBATCH --partition=cs402-openmp"
+        echo "#SBATCH --nodes=1"
+        echo "#SBATCH --ntasks-per-node=1"
+        echo "#SBATCH --cpus-per-task=6"
+        echo "#SBATCH --time=00:01:00"
         echo "module load cs402-mpi"
         echo "srun $executable"
     } > "$sbatch_file"
