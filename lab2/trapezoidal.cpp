@@ -18,7 +18,8 @@ int main(int argc, char const* argv[]) {
     double x = static_cast<const double>(a);
 
     const double start_time = omp_get_wtime();
-#pragma omp parallel for reduction(+ : integral)
+
+#pragma omp parallel for reduction(+ : integral) reduction(+ : x)
     for (long i = 1; i <= n; ++i) {
         x += h;
         integral += f(x);
