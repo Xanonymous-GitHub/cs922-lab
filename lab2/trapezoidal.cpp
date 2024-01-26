@@ -21,6 +21,8 @@ int main(int argc, char const* argv[]) {
         integral += f(x);
     }
 
+#pragma omp barrier
+
     integral *= h;
 
     std::cout
