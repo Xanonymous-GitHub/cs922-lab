@@ -52,7 +52,7 @@ function run_job() {
         echo "#SBATCH --ntasks-per-node=1"
         echo "#SBATCH --cpus-per-task=6"
         echo "#SBATCH --time=00:01:00"
-        echo "module load cs402-mpi"
+        echo "module load cs402-mpi > /dev/null"
         echo "srun $executable"
     } > "$sbatch_file"
 
