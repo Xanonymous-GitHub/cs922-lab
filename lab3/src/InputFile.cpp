@@ -4,13 +4,14 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <unordered_map>
 
-InputFile::InputFile(const char *filename) {
-    std::ifstream ifs(filename);
+InputFile::InputFile(const std::string& filename) {
+    std::ifstream ifs{filename};
 
     if (!ifs.good()) {
         std::cerr << "File " << filename << " not found!" << std::endl;
-        exit(1);
+        std::exit(1);
     }
 
     while (true) {
@@ -18,19 +19,21 @@ InputFile::InputFile(const char *filename) {
 
         std::getline(ifs, line);
 
-        if (ifs.eof())
+        if (ifs.eof()) {
             break;
+        }
 
-        std::istringstream iss(line);
+        std::istringstream iss{line};
         std::string key;
 
         iss >> key;
-        if (key.empty() || key[0] == '#')
+        if (key.empty() || key[0] == '#') {
             continue;
+        }
 
-        if (pairs.find(key) != pairs.end()) {
+        if (pairs.contains(key)) {
             std::cerr << "Duplicate key " << key << " in input file" << std::endl;
-            exit(1);
+            std::exit(1);
         }
 
         std::string val;
@@ -41,19 +44,15 @@ InputFile::InputFile(const char *filename) {
     ifs.close();
 }
 
-InputFile::~InputFile() {
-}
+template<typename T>
+T InputFile::get(const std::string& name, const T& dfault) const {
+    const auto itr = pairs.find(name);
 
-template <typename T>
-T InputFile::get(
-    const std::string &name,
-    const T &dfault) const {
-    std::map<std::string, std::string>::const_iterator itr = pairs.find(name);
-
-    if (itr == pairs.end())
+    if (itr == pairs.end()) {
         return dfault;
+    }
 
-    std::istringstream iss(itr->second);
+    std::istringstream iss{itr->second};
 
     T val;
     iss >> val;
@@ -61,39 +60,36 @@ T InputFile::get(
     return val;
 }
 
-int InputFile::getInt(
-    const std::string &name,
-    const int dfault) const {
+int InputFile::getInt(const std::string& name, const int& dfault) const {
     return get(name, dfault);
 }
 
-double InputFile::getDouble(
-    const std::string &name,
-    const double dfault) const {
+double InputFile::getDouble(const std::string& name, const double& dfault) const {
     return get(name, dfault);
 }
 
-std::string InputFile::getString(
-    const std::string &name,
-    const std::string &dfault) const {
+std::string InputFile::getString(const std::string& name, const std::string& dfault) const {
     return get(name, dfault);
 }
 
 std::vector<double> InputFile::getDoubleList(
-    const std::string &name,
-    const std::vector<double> &dfault) const {
-    std::map<std::string, std::string>::const_iterator itr = pairs.find(name);
+    const std::string& name,
+    const std::vector<double>& dfault
+) const {
+    const auto itr = pairs.find(name);
 
-    if (itr == pairs.end())
+    if (itr == pairs.end()) {
         return dfault;
+    }
 
-    std::istringstream iss(itr->second);
+    std::istringstream iss{itr->second};
 
     std::vector<double> vallist;
     double val;
 
-    while (iss >> val)
+    while (iss >> val) {
         vallist.push_back(val);
+    }
 
     return vallist;
 }

@@ -1,37 +1,37 @@
-#ifndef INPUT_FILE_H_
-#define INPUT_FILE_H_
+#pragma once
 
-#include <map>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
-class InputFile {
-private:
-    std::map<std::string, std::string> pairs;
+class InputFile final {
+    std::unordered_map<std::string, std::string> pairs;
 
-    template <typename T>
-    T get(
-        const std::string &name,
-        const T &dfault) const;
+    template<typename T>
+    T get(const std::string& name, const T& dfault) const;
 
 public:
-    InputFile(const char *filename);
-    ~InputFile();
+    InputFile() const = delete;
 
-    int getInt(
-        const std::string &name,
-        const int dfault) const;
+    InputFile(const InputFile& other) const = delete;
 
-    double getDouble(
-        const std::string &name,
-        const double dfault) const;
+    InputFile(InputFile&& other) const = delete;
 
-    std::string getString(
-        const std::string &name,
-        const std::string &dfault) const;
+    InputFile& operator=(const InputFile& other) const = delete;
 
-    std::vector<double> getDoubleList(
-        const std::string &name,
-        const std::vector<double> &dfault) const;
+    explicit InputFile(const std::string& filename);
+
+    ~InputFile() const = default;
+
+    [[nodiscard]]
+    int getInt(const std::string& name, const int& dfault) const;
+
+    [[nodiscard]]
+    double getDouble(const std::string& name, const double& dfault) const;
+
+    [[nodiscard]]
+    std::string getString(const std::string& name, const std::string& dfault) const;
+
+    [[nodiscard]]
+    std::vector<double> getDoubleList(const std::string& name, const std::vector<double>& dfault) const;
 };
-#endif
