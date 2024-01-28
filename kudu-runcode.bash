@@ -53,6 +53,7 @@ function run_job() {
         echo "#SBATCH --cpus-per-task=6"
         echo "#SBATCH --time=00:01:00"
         echo "module load cs402-mpi > /dev/null"
+        echo "module load GCC/12.2.0 > /dev/null"
         echo "srun $executable"
     } > "$sbatch_file"
 
