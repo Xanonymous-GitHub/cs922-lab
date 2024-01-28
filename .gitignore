@@ -34,6 +34,7 @@
 
 # Debug files
 *.vtk
+*.visit
 
 ### CMake ###
 CMakeLists.txt.user
