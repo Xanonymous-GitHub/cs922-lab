@@ -1,23 +1,20 @@
-#ifndef VTKWRITER_H_
-#define VTKWRITER_H_
-
-#include <string>
+#pragma once
 
 #include "Mesh.hpp"
 
-class VtkWriter {
-private:
+#include <string>
+
+class VtkWriter final {
     std::string dump_basename;
 
     std::string vtk_header;
 
-    Mesh *mesh;
+    Mesh mesh;
 
-    void writeVtk(int step, double time);
+    void writeVtk(const int& step, const double& time);
 
 public:
-    VtkWriter(std::string basename, Mesh *mesh);
+    VtkWriter(std::string basename, const Mesh& mesh);
 
-    void write(int step, double time);
+    void write(const int& step, const double& time);
 };
-#endif
