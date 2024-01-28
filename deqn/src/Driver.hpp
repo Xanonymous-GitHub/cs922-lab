@@ -5,7 +5,6 @@
 #include "Mesh.hpp"
 #include "VtkWriter.hpp"
 
-#include <memory>
 #include <string>
 
 class Driver final {
