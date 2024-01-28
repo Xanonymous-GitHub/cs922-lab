@@ -5,7 +5,7 @@
 #include <iostream>
 #include <string>
 
-int main(const int& argc, const char* argv[]) {
+int main(const int argc, const char* argv[]) {
     if (argc != 2) {
         std::cerr << "Usage: deqn <filename>" << std::endl;
         std::exit(1);
