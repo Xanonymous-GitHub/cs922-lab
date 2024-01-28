@@ -31,7 +31,7 @@ class Mesh final {
 public:
     Mesh() const = delete;
 
-    Mesh(const Mesh& other) const = delete;
+    Mesh(const Mesh& other) const = default;
 
     Mesh(Mesh&& other) const = delete;
 
