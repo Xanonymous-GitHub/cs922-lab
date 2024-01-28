@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-ExplicitScheme::ExplicitScheme(const Mesh& m) : mesh(m) {
+ExplicitScheme::ExplicitScheme(const std::shared_ptr<Mesh>& m) : mesh(m) {
 }
 
 void ExplicitScheme::doAdvance(const double& dt) {
@@ -11,7 +11,7 @@ void ExplicitScheme::doAdvance(const double& dt) {
     updateBoundaries();
 }
 
-void ExplicitScheme::updateBoundaries() {
+void ExplicitScheme::updateBoundaries() const {
     for (int i = 0; i < 4; i++) {
         reflectBoundaries(i);
     }
@@ -21,15 +21,15 @@ void ExplicitScheme::init() {
     updateBoundaries();
 }
 
-void ExplicitScheme::reset() {
-    auto& u0 = mesh.getU0();
-    const auto& u1 = mesh.getU1();
-    const int x_min = mesh.getMin()[0];
-    const int x_max = mesh.getMax()[0];
-    const int y_min = mesh.getMin()[1];
-    const int y_max = mesh.getMax()[1];
+void ExplicitScheme::reset() const {
+    auto& u0 = mesh->getU0();
+    const auto& u1 = mesh->getU1();
+    const int x_min = mesh->getMin()[0];
+    const int x_max = mesh->getMax()[0];
+    const int y_min = mesh->getMin()[1];
+    const int y_max = mesh->getMax()[1];
 
-    const int nx = mesh.getNx()[0] + 2;
+    const int nx = mesh->getNx()[0] + 2;
 
     for (int k = y_min - 1; k <= y_max + 1; k++) {
         for (int j = x_min - 1; j <= x_max + 1; j++) {
@@ -39,17 +39,17 @@ void ExplicitScheme::reset() {
     }
 }
 
-void ExplicitScheme::diffuse(const double& dt) {
-    const auto& u0 = mesh.getU0();
-    auto& u1 = mesh.getU1();
-    const int x_min = mesh.getMin()[0];
-    const int x_max = mesh.getMax()[0];
-    const int y_min = mesh.getMin()[1];
-    const int y_max = mesh.getMax()[1];
-    const double dx = mesh.getDx()[0];
-    const double dy = mesh.getDx()[1];
+void ExplicitScheme::diffuse(const double& dt) const {
+    const auto& u0 = mesh->getU0();
+    auto& u1 = mesh->getU1();
+    const int x_min = mesh->getMin()[0];
+    const int x_max = mesh->getMax()[0];
+    const int y_min = mesh->getMin()[1];
+    const int y_max = mesh->getMax()[1];
+    const double dx = mesh->getDx()[0];
+    const double dy = mesh->getDx()[1];
 
-    const int nx = mesh.getNx()[0] + 2;
+    const int nx = mesh->getNx()[0] + 2;
 
     const double rx = dt / (dx * dx);
     const double ry = dt / (dy * dy);
@@ -67,14 +67,14 @@ void ExplicitScheme::diffuse(const double& dt) {
     }
 }
 
-void ExplicitScheme::reflectBoundaries(const int& boundary_id) {
-    auto& u0 = mesh.getU0();
-    const int x_min = mesh.getMin()[0];
-    const int x_max = mesh.getMax()[0];
-    const int y_min = mesh.getMin()[1];
-    const int y_max = mesh.getMax()[1];
+void ExplicitScheme::reflectBoundaries(const int& boundary_id) const {
+    auto& u0 = mesh->getU0();
+    const int x_min = mesh->getMin()[0];
+    const int x_max = mesh->getMax()[0];
+    const int y_min = mesh->getMin()[1];
+    const int y_max = mesh->getMax()[1];
 
-    const int nx = mesh.getNx()[0] + 2;
+    const int nx = mesh->getNx()[0] + 2;
 
     switch (boundary_id) {
         case 0: {

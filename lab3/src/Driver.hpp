@@ -5,10 +5,11 @@
 #include "Mesh.hpp"
 #include "VtkWriter.hpp"
 
+#include <memory>
 #include <string>
 
 class Driver final {
-    Mesh mesh;
+    std::shared_ptr<Mesh> mesh{};
     Diffusion diffusion;
     VtkWriter writer;
 

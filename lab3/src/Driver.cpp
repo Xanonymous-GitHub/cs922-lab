@@ -3,7 +3,7 @@
 #include <iostream>
 
 Driver::Driver(const InputFile& input, const std::string& problem_name)
-    : mesh{input},
+    : mesh{std::make_shared<Mesh>(input)},
       diffusion{input, mesh},
       writer{problem_name, mesh},
       _problem_name(problem_name) {
@@ -59,7 +59,7 @@ void Driver::run() {
         }
 
         if (step % summary_frequency == 0 && summary_frequency != -1) {
-            const double temperature = mesh.getTotalTemperature();
+            const double temperature = mesh->getTotalTemperature();
             std::cout << "+\tcurrent total temperature: " << temperature << std::endl;
         }
     }

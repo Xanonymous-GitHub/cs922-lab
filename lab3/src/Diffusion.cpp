@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-Diffusion::Diffusion(const InputFile& input, const Mesh& m) : mesh(m) {
+Diffusion::Diffusion(const InputFile& input, const std::shared_ptr<Mesh>& m) : mesh{m} {
     if (const std::string scheme_str = input.getString("scheme", "explicit"); scheme_str == "explicit") {
         scheme = std::make_unique<ExplicitScheme>(mesh);
     } else {
@@ -21,14 +21,14 @@ Diffusion::Diffusion(const InputFile& input, const Mesh& m) : mesh(m) {
     init();
 }
 
-void Diffusion::init() {
-    auto& u0 = mesh.getU0();
+void Diffusion::init() const {
+    auto& u0 = mesh->getU0();
 
-    const int x_max = mesh.getNx()[0];
-    const int y_max = mesh.getNx()[1];
+    const int x_max = mesh->getNx()[0];
+    const int y_max = mesh->getNx()[1];
 
-    const auto& cellx = mesh.getCellX();
-    const auto& celly = mesh.getCellY();
+    const auto& cellx = mesh->getCellX();
+    const auto& celly = mesh->getCellY();
 
     const int nx = x_max + 2;
 

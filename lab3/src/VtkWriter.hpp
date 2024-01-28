@@ -2,6 +2,7 @@
 
 #include "Mesh.hpp"
 
+#include <memory>
 #include <string>
 
 class VtkWriter final {
@@ -9,12 +10,12 @@ class VtkWriter final {
 
     std::string vtk_header;
 
-    Mesh mesh;
+    std::shared_ptr<Mesh> mesh;
 
-    void writeVtk(const int& step, const double& time);
+    void writeVtk(const int& step, const double& time) const;
 
 public:
-    VtkWriter(std::string basename, const Mesh& mesh);
+    VtkWriter(std::string basename, const std::shared_ptr<Mesh>& mesh);
 
     void write(const int& step, const double& time);
 };

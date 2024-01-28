@@ -8,7 +8,7 @@
 #include <vector>
 
 class Diffusion final {
-    Mesh mesh;
+    std::shared_ptr<Mesh> mesh{};
 
     std::unique_ptr<Scheme> scheme{};
 
@@ -23,11 +23,11 @@ public:
 
     Diffusion& operator=(const Diffusion& other) const = delete;
 
-    Diffusion(const InputFile& input, const Mesh& m);
+    Diffusion(const InputFile& input, const std::shared_ptr<Mesh>& m);
 
     ~Diffusion() = default;
 
-    void init();
+    void init() const;
 
     void doCycle(const double& dt) const;
 };

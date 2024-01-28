@@ -3,16 +3,18 @@
 #include "Mesh.hpp"
 #include "Scheme.hpp"
 
+#include <memory>
+
 class ExplicitScheme final : public Scheme {
-    Mesh mesh;
+    std::shared_ptr<Mesh> mesh;
 
-    void updateBoundaries();
+    void updateBoundaries() const;
 
-    void reset();
+    void reset() const;
 
-    void diffuse(const double& dt);
+    void diffuse(const double& dt) const;
 
-    void reflectBoundaries(const int& boundary_id);
+    void reflectBoundaries(const int& boundary_id) const;
 
 public:
     ExplicitScheme() = delete;
@@ -23,7 +25,7 @@ public:
 
     ExplicitScheme& operator=(const ExplicitScheme& other) const = delete;
 
-    explicit ExplicitScheme(const Mesh& m);
+    explicit ExplicitScheme(const std::shared_ptr<Mesh>& m);
 
     ~ExplicitScheme() override = default;
 
