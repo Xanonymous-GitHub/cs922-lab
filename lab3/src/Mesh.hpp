@@ -42,10 +42,10 @@ public:
     ~Mesh() const = default;
 
     [[nodiscard]]
-    const std::vector<double>& getU0() const;
+    std::vector<double>& getU0();
 
     [[nodiscard]]
-    const std::vector<double>& getU1() const;
+    std::vector<double>& getU1();
 
     [[nodiscard]]
     const std::array<double, NDIM>& getDx() const;

@@ -56,11 +56,11 @@ void Mesh::allocate() {
     allocated = true;
 }
 
-const std::vector<double>& Mesh::getU0() const {
+std::vector<double>& Mesh::getU0() {
     return u0;
 }
 
-const std::vector<double>& Mesh::getU1() const {
+std::vector<double>& Mesh::getU1() {
     return u1;
 }
 
