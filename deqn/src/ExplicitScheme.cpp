@@ -12,6 +12,7 @@ void ExplicitScheme::doAdvance(const double& dt) const {
 }
 
 void ExplicitScheme::updateBoundaries() const {
+#pragma omp parallel for schedule(static) default(none) shared(mesh)
     for (int i = 0; i < 4; i++) {
         reflectBoundaries(i);
     }
@@ -31,6 +32,7 @@ void ExplicitScheme::reset() const {
 
     const int nx = mesh->getNx()[0] + 2;
 
+#pragma omp parallel for collapse(2) schedule(static) default(none) shared(u0, u1, x_min, x_max, y_min, y_max, nx)
     for (int k = y_min - 1; k <= y_max + 1; k++) {
         for (int j = x_min - 1; j <= x_max + 1; j++) {
             const int i = Mesh::poly2(j, k, x_min - 1, y_min - 1, nx);
@@ -54,6 +56,7 @@ void ExplicitScheme::diffuse(const double& dt) const {
     const double rx = dt / (dx * dx);
     const double ry = dt / (dy * dy);
 
+#pragma omp parallel for collapse(2) schedule(static) default(none) shared(u0, u1, x_min, x_max, y_min, y_max, nx, rx, ry)
     for (int k = y_min; k <= y_max; k++) {
         for (int j = x_min; j <= x_max; j++) {
             const int n1 = Mesh::poly2(j, k, x_min - 1, y_min - 1, nx);
@@ -79,6 +82,7 @@ void ExplicitScheme::reflectBoundaries(const int& boundary_id) const {
     switch (boundary_id) {
         case 0: {
             /* top */
+#pragma omp parallel for schedule(static) default(none) shared(u0, x_min, x_max, y_min, y_max, nx)
             for (int j = x_min; j <= x_max; j++) {
                 const int n1 = Mesh::poly2(j, y_max, x_min - 1, y_min - 1, nx);
                 const int n2 = Mesh::poly2(j, y_max + 1, x_min - 1, y_min - 1, nx);
@@ -90,6 +94,7 @@ void ExplicitScheme::reflectBoundaries(const int& boundary_id) const {
 
         case 1: {
             /* right */
+#pragma omp parallel for schedule(static) default(none) shared(u0, x_min, x_max, y_min, y_max, nx)
             for (int k = y_min; k <= y_max; k++) {
                 const int n1 = Mesh::poly2(x_max, k, x_min - 1, y_min - 1, nx);
                 const int n2 = Mesh::poly2(x_max + 1, k, x_min - 1, y_min - 1, nx);
@@ -101,6 +106,7 @@ void ExplicitScheme::reflectBoundaries(const int& boundary_id) const {
 
         case 3: {
             /* left */
+#pragma omp parallel for schedule(static) default(none) shared(u0, x_min, x_max, y_min, y_max, nx)
             for (int k = y_min; k <= y_max; k++) {
                 const int n1 = Mesh::poly2(x_min, k, x_min - 1, y_min - 1, nx);
                 const int n2 = Mesh::poly2(x_min - 1, k, x_min - 1, y_min - 1, nx);
@@ -112,6 +118,7 @@ void ExplicitScheme::reflectBoundaries(const int& boundary_id) const {
 
         case 2: {
             /* bottom */
+#pragma omp parallel for schedule(static) default(none) shared(u0, x_min, x_max, y_min, y_max, nx)
             for (int j = x_min; j <= x_max; j++) {
                 const int n1 = Mesh::poly2(j, y_min, x_min - 1, y_min - 1, nx);
                 const int n2 = Mesh::poly2(j, y_min - 1, x_min - 1, y_min - 1, nx);

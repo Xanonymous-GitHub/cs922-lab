@@ -109,6 +109,7 @@ double Mesh::getTotalTemperature() const {
 
     const int nx = n[0] + 2;
 
+#pragma omp parallel for collapse(2) schedule(static) reduction(+ : temperature) default(none) shared(u0, x_min, x_max, y_min, y_max, nx)
     for (int k = y_min; k <= y_max; k++) {
         for (int j = x_min; j <= x_max; j++) {
             const int n1 = poly2(j, k, x_min - 1, y_min - 1, nx);
