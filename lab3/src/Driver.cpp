@@ -43,10 +43,12 @@ Driver::Driver(const InputFile& input, const std::string& problem_name)
 
 void Driver::run() {
     int step = 0;
-    int t_current;
+    double t_current = t_start;
 
-    for (t_current = static_cast<int>(t_start); t_current < t_end; t_current += static_cast<int>(dt)) {
-        step = static_cast<int>(t_current / dt) + 1;
+    while (t_current < t_end) {
+        t_current += dt;
+
+        step = static_cast<int>(t_current / dt);
 
         std::cout << "+ step: " << step << ", dt:   " << dt << std::endl;
 
