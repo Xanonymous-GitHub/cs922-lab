@@ -9,13 +9,15 @@
 #include <string>
 
 class Driver final {
-    std::shared_ptr<Mesh> mesh{};
-    Diffusion diffusion;
-    VtkWriter writer;
+    const std::shared_ptr<Mesh> mesh{};
+
+    const Diffusion diffusion;
+
+    const VtkWriter writer;
+
+    const std::string _problem_name;
 
     double t_start, t_end, dt_max, dt;
-
-    std::string _problem_name;
 
     int vis_frequency, summary_frequency;
 
@@ -32,5 +34,5 @@ public:
 
     ~Driver() = default;
 
-    void run();
+    void run() const;
 };

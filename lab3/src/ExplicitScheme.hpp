@@ -6,7 +6,7 @@
 #include <memory>
 
 class ExplicitScheme final : public Scheme {
-    std::shared_ptr<Mesh> mesh;
+    const std::shared_ptr<Mesh> mesh{};
 
     void updateBoundaries() const;
 
@@ -29,7 +29,7 @@ public:
 
     ~ExplicitScheme() override = default;
 
-    void doAdvance(const double& dt) override;
+    void doAdvance(const double& dt) const override;
 
-    void init() override;
+    void init() const override;
 };

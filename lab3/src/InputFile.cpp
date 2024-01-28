@@ -45,12 +45,11 @@ InputFile::InputFile(const std::string& filename) {
 
 template<typename T>
 T InputFile::get(const std::string& name, const T& dfault) const {
-    const auto itr = pairs.find(name);
-
-    if (itr == pairs.end()) {
+    if (!pairs.contains(name)) {
         return dfault;
     }
 
+    const auto itr = pairs.find(name);
     std::istringstream iss{itr->second};
 
     T val;
@@ -75,12 +74,11 @@ std::vector<double> InputFile::getDoubleList(
     const std::string& name,
     const std::vector<double>& dfault
 ) const {
-    const auto itr = pairs.find(name);
-
-    if (itr == pairs.end()) {
+    if (!pairs.contains(name)) {
         return dfault;
     }
 
+    const auto itr = pairs.find(name);
     std::istringstream iss{itr->second};
 
     std::vector<double> vallist;

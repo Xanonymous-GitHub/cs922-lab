@@ -5,7 +5,7 @@
 #include <vector>
 
 class InputFile final {
-    std::unordered_map<std::string, std::string> pairs;
+    std::unordered_map<std::string, std::string> pairs{};
 
     template<typename T>
     T get(const std::string& name, const T& dfault) const;

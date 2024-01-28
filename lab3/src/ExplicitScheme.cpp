@@ -5,7 +5,7 @@
 ExplicitScheme::ExplicitScheme(const std::shared_ptr<Mesh>& m) : mesh(m) {
 }
 
-void ExplicitScheme::doAdvance(const double& dt) {
+void ExplicitScheme::doAdvance(const double& dt) const {
     diffuse(dt);
     reset();
     updateBoundaries();
@@ -17,7 +17,7 @@ void ExplicitScheme::updateBoundaries() const {
     }
 }
 
-void ExplicitScheme::init() {
+void ExplicitScheme::init() const {
     updateBoundaries();
 }
 

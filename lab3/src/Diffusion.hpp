@@ -8,7 +8,7 @@
 #include <vector>
 
 class Diffusion final {
-    std::shared_ptr<Mesh> mesh{};
+    const std::shared_ptr<Mesh> mesh{};
 
     std::unique_ptr<Scheme> scheme{};
 

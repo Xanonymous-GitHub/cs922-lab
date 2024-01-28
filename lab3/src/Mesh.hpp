@@ -25,9 +25,9 @@ class Mesh final {
      */
     std::array<int, 4> neighbours{};
 
-    void allocate();
-
     bool allocated = false;
+
+    void allocate();
 
 public:
     Mesh() = delete;

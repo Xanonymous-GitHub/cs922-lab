@@ -41,7 +41,7 @@ Driver::Driver(const InputFile& input, const std::string& problem_name)
     }
 }
 
-void Driver::run() {
+void Driver::run() const {
     int step = 0;
     double t_current = t_start;
 

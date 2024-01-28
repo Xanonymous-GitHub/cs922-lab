@@ -12,7 +12,7 @@ public:
 
     virtual ~Scheme() = default;
 
-    virtual void doAdvance(const double& dt) = 0;
+    virtual void doAdvance(const double& dt) const = 0;
 
-    virtual void init() = 0;
+    virtual void init() const = 0;
 };

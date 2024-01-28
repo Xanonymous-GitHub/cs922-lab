@@ -11,9 +11,10 @@ int main(const int argc, const char* argv[]) {
         std::exit(1);
     }
 
-    const char* filename = argv[1];
+    const std::string filename = argv[1];
 
     const InputFile input{filename};
+
     std::string problem_name(filename);
 
     if (const auto len = problem_name.length(); problem_name.substr(len - 3, 3) == ".in") {
@@ -31,8 +32,7 @@ int main(const int argc, const char* argv[]) {
 
     problem_name = problem_name.substr(last_sep, problem_name.size());
 
-    Driver driver{input, problem_name};
-
+    const Driver driver{input, problem_name};
     driver.run();
 
     return 0;
