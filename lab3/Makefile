@@ -28,8 +28,8 @@ CXXFLAGS_STANDARD := -std=c++2a
 LD := $(CXX)
 
 # select optimized or debug
-#CXXFLAGS := $(CXXFLAGS_OPT) $(CPPFLAGS)
-CXXFLAGS := $(CXXFLAGS_OPT) $(CXXFLAGS_DEBUG) $(CPPFLAGS)
+CXXFLAGS := $(CXXFLAGS_OPT) $(CPPFLAGS)
+# CXXFLAGS := $(CXXFLAGS_OPT) $(CXXFLAGS_DEBUG) $(CPPFLAGS)
 
 # add openmp flags (comment out for serial build)
 CXXFLAGS += $(CXXFLAGS_OPENMP)
