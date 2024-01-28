@@ -11,17 +11,17 @@ class InputFile final {
     T get(const std::string& name, const T& dfault) const;
 
 public:
-    InputFile() const = delete;
+    InputFile() = delete;
 
-    InputFile(const InputFile& other) const = delete;
+    InputFile(const InputFile& other) = delete;
 
-    InputFile(InputFile&& other) const = delete;
+    InputFile(InputFile&& other) = delete;
 
     InputFile& operator=(const InputFile& other) const = delete;
 
     explicit InputFile(const std::string& filename);
 
-    ~InputFile() const = default;
+    ~InputFile() = default;
 
     [[nodiscard]]
     int getInt(const std::string& name, const int& dfault) const;

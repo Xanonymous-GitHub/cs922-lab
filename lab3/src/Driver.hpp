@@ -19,17 +19,17 @@ class Driver final {
     int vis_frequency, summary_frequency;
 
 public:
-    Driver() const = delete;
+    Driver() = delete;
 
-    Driver(const Driver& other) const = delete;
+    Driver(const Driver& other) = delete;
 
-    Driver(Driver&& other) const = delete;
+    Driver(Driver&& other) = delete;
 
     Driver& operator=(const Driver& other) const = delete;
 
     Driver(const InputFile& input, const std::string& problem_name);
 
-    ~Driver() const = default;
+    ~Driver() = default;
 
     void run();
 };

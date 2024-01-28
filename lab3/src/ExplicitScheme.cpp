@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-ExplicitScheme::ExplicitScheme(const Mesh& m) const : mesh(m) {
+ExplicitScheme::ExplicitScheme(const Mesh& m) : mesh(m) {
 }
 
 void ExplicitScheme::doAdvance(const double& dt) {

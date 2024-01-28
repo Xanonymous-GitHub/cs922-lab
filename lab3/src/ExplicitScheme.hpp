@@ -15,17 +15,17 @@ class ExplicitScheme final : public Scheme {
     void reflectBoundaries(const int& boundary_id);
 
 public:
-    ExplicitScheme() const = delete;
+    ExplicitScheme() = delete;
 
-    ExplicitScheme(const ExplicitScheme& other) const = delete;
+    ExplicitScheme(const ExplicitScheme& other) = delete;
 
-    ExplicitScheme(ExplicitScheme&& other) const = delete;
+    ExplicitScheme(ExplicitScheme&& other) = delete;
 
     ExplicitScheme& operator=(const ExplicitScheme& other) const = delete;
 
-    explicit ExplicitScheme(const Mesh& m) const;
+    explicit ExplicitScheme(const Mesh& m);
 
-    ~ExplicitScheme() const override = default;
+    ~ExplicitScheme() override = default;
 
     void doAdvance(const double& dt) override;
 

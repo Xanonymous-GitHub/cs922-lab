@@ -2,15 +2,15 @@
 
 class Scheme {
 public:
-    Scheme() const = default;
+    Scheme() = default;
 
-    Scheme(const Scheme& other) const = delete;
+    Scheme(const Scheme& other) = delete;
 
-    Scheme(Scheme&& other) const = delete;
+    Scheme(Scheme&& other) = delete;
 
     Scheme& operator=(const Scheme& other) const = delete;
 
-    virtual ~Scheme() const = default;
+    virtual ~Scheme() = default;
 
     virtual void doAdvance(const double& dt) = 0;
 

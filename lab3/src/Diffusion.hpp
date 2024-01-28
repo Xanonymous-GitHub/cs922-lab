@@ -15,17 +15,17 @@ class Diffusion final {
     std::vector<double> subregion{};
 
 public:
-    Diffusion() const = delete;
+    Diffusion() = delete;
 
-    Diffusion(const Diffusion& other) const = delete;
+    Diffusion(const Diffusion& other) = delete;
 
-    Diffusion(Diffusion&& other) const = delete;
+    Diffusion(Diffusion&& other) = delete;
 
     Diffusion& operator=(const Diffusion& other) const = delete;
 
     Diffusion(const InputFile& input, const Mesh& m);
 
-    ~Diffusion() const = default;
+    ~Diffusion() = default;
 
     void init();
 

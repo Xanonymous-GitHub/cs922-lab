@@ -30,17 +30,17 @@ class Mesh final {
     bool allocated = false;
 
 public:
-    Mesh() const = delete;
+    Mesh() = delete;
 
-    Mesh(const Mesh& other) const = default;
+    Mesh(const Mesh& other) = default;
 
-    Mesh(Mesh&& other) const = delete;
+    Mesh(Mesh&& other) = delete;
 
     Mesh& operator=(const Mesh& other) const = delete;
 
     explicit Mesh(const InputFile& inputFile);
 
-    ~Mesh() const = default;
+    ~Mesh() = default;
 
     [[nodiscard]]
     std::vector<double>& getU0();
