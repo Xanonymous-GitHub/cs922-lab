@@ -18,7 +18,7 @@ CXX := clang++
 CXXFLAGS_DEBUG := -g -DDEBUG
 CXXFLAGS_OPT := -O3
 CXXFLAGS_OPENMP := -fopenmp
-CXXFLAGS_STANDARD := -std=c++2c
+CXXFLAGS_STANDARD := -std=c++2a
 
 LD := $(CXX)
 
