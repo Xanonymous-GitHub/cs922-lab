@@ -1,15 +1,18 @@
-#ifndef SCHEME_H_
-#define SCHEME_H_
-
-#include "Mesh.hpp"
+#pragma once
 
 class Scheme {
-private:
-    Mesh *mesh;
-
 public:
-    virtual void doAdvance(const double dt) = 0;
+    Scheme() const = default;
+
+    Scheme(const Scheme& other) const = delete;
+
+    Scheme(Scheme&& other) const = delete;
+
+    Scheme& operator=(const Scheme& other) const = delete;
+
+    virtual ~Scheme() const = default;
+
+    virtual void doAdvance(const double& dt) = 0;
 
     virtual void init() = 0;
 };
-#endif
