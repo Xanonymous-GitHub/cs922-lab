@@ -1,36 +1,35 @@
-#ifndef DRIVER_H_
-#define DRIVER_H_
-
-#include <string>
+#pragma once
 
 #include "Diffusion.hpp"
 #include "InputFile.hpp"
 #include "Mesh.hpp"
 #include "VtkWriter.hpp"
 
-class Driver {
-private:
-    InputFile *input;
-    Mesh *mesh;
-    Diffusion *diffusion;
-    VtkWriter *writer;
+#include <string>
 
-    double t_start;
-    double t_end;
-    double dt_max;
+class Driver final {
+    Mesh mesh;
+    Diffusion diffusion;
+    VtkWriter writer;
 
-    double dt;
+    double t_start, t_end, dt_max, dt;
 
-    std::string problem_name;
+    std::string _problem_name;
 
-    int vis_frequency;
-    int summary_frequency;
+    int vis_frequency, summary_frequency;
 
 public:
-    Driver(const InputFile *input, const std::string &problem_name);
+    Driver() const = delete;
 
-    ~Driver();
+    Driver(const Driver& other) const = delete;
+
+    Driver(Driver&& other) const = delete;
+
+    Driver& operator=(const Driver& other) const = delete;
+
+    Driver(const InputFile& input, const std::string& problem_name);
+
+    ~Driver() const = default;
 
     void run();
 };
-#endif
