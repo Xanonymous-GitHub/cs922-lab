@@ -32,6 +32,9 @@
 *.out
 *.app
 
+# Debug files
+*.vtk
+
 ### CMake ###
 CMakeLists.txt.user
 # CMakeCache.txt
