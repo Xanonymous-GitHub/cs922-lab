@@ -1,4 +1,5 @@
 BUILDDIR := build
+OUTDIR := out
 PRODUCT := deqn
 
 SRCDIR := src
@@ -54,3 +55,4 @@ endef
 clean :
 	rm -f $(BINARY) $(OBJS)
 	rm -rf $(BUILDDIR)
+	rm -rf $(OUTDIR)
