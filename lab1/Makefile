@@ -1,5 +1,10 @@
 # Define the compiler
-CXX := clang++
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S), Darwin)
+    CXX := clang++
+else
+    CXX := g++
+endif
 
 # Compiler flags
 CXXFLAGS := -O2 -std=c++2b
