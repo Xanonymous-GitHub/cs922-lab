@@ -1,0 +1,35 @@
+name: Try Build
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  lab1-build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: make lab1
+      run: cd lab1 && make
+
+  lab2-build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: make lab2
+      run: cd lab2 && make
+
+  deqn-build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: make deqn
+      run: cd deqn && make
