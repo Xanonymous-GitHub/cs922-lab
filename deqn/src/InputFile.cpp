@@ -30,7 +30,8 @@ InputFile::InputFile(const std::string& filename) {
             continue;
         }
 
-        if (pairs.contains(key)) {
+        // TODO: migrate to `contains` when using c++20 or above.
+        if (const auto& found_iter = pairs.find(key); found_iter != pairs.cend()) {
             std::cerr << "Duplicate key " << key << " in input file" << std::endl;
             std::exit(1);
         }
@@ -45,11 +46,13 @@ InputFile::InputFile(const std::string& filename) {
 
 template<typename T>
 T InputFile::get(const std::string& name, const T& dfault) const {
-    if (!pairs.contains(name)) {
+    const auto itr = pairs.find(name);
+
+    // TODO: migrate to `contains` when using c++20 or above.
+    if (itr == pairs.cend()) {
         return dfault;
     }
 
-    const auto itr = pairs.find(name);
     std::istringstream iss{itr->second};
 
     T val;
@@ -74,11 +77,13 @@ std::vector<double> InputFile::getDoubleList(
     const std::string& name,
     const std::vector<double>& dfault
 ) const {
-    if (!pairs.contains(name)) {
+    const auto itr = pairs.find(name);
+
+    // TODO: migrate to `contains` when using c++20 or above.
+    if (itr == pairs.cend()) {
         return dfault;
     }
 
-    const auto itr = pairs.find(name);
     std::istringstream iss{itr->second};
 
     std::vector<double> vallist;
