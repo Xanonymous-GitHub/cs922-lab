@@ -13,8 +13,13 @@ OBJS += $(FSRCS:$(SRCDIR)/fortran/%.f90=$(BUILDDIR)/%.o)
 
 BINARY := $(BUILDDIR)/$(PRODUCT)
 
-# gcc flags:
-CXX := clang++
+# g++ flags:
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S), Darwin)
+    CXX := clang++
+else
+    CXX := g++
+endif
 CXXFLAGS_DEBUG := -g -DDEBUG
 CXXFLAGS_OPT := -O3
 CXXFLAGS_OPENMP := -fopenmp
