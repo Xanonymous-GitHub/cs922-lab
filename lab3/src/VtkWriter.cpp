@@ -1,40 +1,44 @@
 #include "VtkWriter.hpp"
 
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 
 VtkWriter::VtkWriter(std::string basename, const std::shared_ptr<Mesh>& mesh)
-    : dump_basename(std::move(basename)),
-      vtk_header("# vtk DataFile Version 3.0\nvtk output\nASCII\n"),
+    : dump_basename{std::move(basename)},
       mesh{mesh} {
     std::ofstream file;
     std::stringstream fname;
 
-    fname << dump_basename << ".visit";
+    if (!std::filesystem::exists(_path_prefix) || !std::filesystem::is_directory(_path_prefix)) {
+        std::filesystem::create_directory(_path_prefix);
+    }
 
-    std::string file_name = fname.str();
+    fname << _path_prefix << dump_basename << ".visit";
 
-    file.open(file_name.c_str());
+    file.open(fname.str());
 
     file << "!NBLOCKS " << 1 << std::endl;
 
     file.close();
 }
 
-void VtkWriter::write(const int& step, const double& time) {
+void VtkWriter::write(const int& step, const double& time) const {
     // Master process writes out the .visit file to coordinate the .vtk files
     std::ofstream file;
     std::stringstream fname;
 
-    fname << dump_basename << ".visit";
-
-    const std::string file_name = fname.str();
+    fname << _path_prefix << dump_basename << ".visit";
 
     // Open file in append mode
-    file.open(file_name.c_str(), std::ofstream::out | std::ofstream::in | std::ofstream::app);
+    file.open(
+        fname.str(),
+        std::ofstream::out | std::ofstream::in | std::ofstream::app
+    );
 
-    file << dump_basename
+    file
+            << dump_basename
             << "."
             << step
             << "."
@@ -50,16 +54,16 @@ void VtkWriter::writeVtk(const int& step, const double& time) const {
     std::ofstream file;
     std::stringstream fname;
 
-    fname << dump_basename
+    fname
+            << _path_prefix
+            << dump_basename
             << "."
             << step
             << "."
             << 1
             << ".vtk";
 
-    const std::string file_name = fname.str();
-
-    file.open(file_name.c_str());
+    file.open(fname.str());
 
     file.setf(std::ios::fixed, std::ios::floatfield);
     file.precision(8);
