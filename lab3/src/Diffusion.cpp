@@ -1,44 +1,36 @@
 #include "Diffusion.hpp"
-
-#include <cstdlib>
-#include <iostream>
-
 #include "ExplicitScheme.hpp"
 
-Diffusion::Diffusion(const InputFile *input, Mesh *m) : mesh(m) {
-    std::string scheme_str = input->getString("scheme", "explicit");
+#include <iostream>
 
-    if (scheme_str.compare("explicit") == 0) {
-        scheme = new ExplicitScheme(input, mesh);
+Diffusion::Diffusion(const InputFile& input, const Mesh& m) : mesh(m) {
+    if (const std::string scheme_str = input.getString("scheme", "explicit"); scheme_str == "explicit") {
+        scheme = std::make_unique<ExplicitScheme>(mesh);
     } else {
         std::cerr << "Error: unknown scheme \"" << scheme_str << "\"" << std::endl;
-        exit(1);
+        std::exit(1);
     }
 
-    subregion = input->getDoubleList("subregion", std::vector<double>());
+    subregion = input.getDoubleList("subregion", std::vector<double>{});
 
-    if (subregion.size() != 0 && subregion.size() != 4) {
+    if (!subregion.empty() && subregion.size() != 4) {
         std::cerr << "Error:  region must have 4 entries (xmin, ymin, xmax, ymax)" << std::endl;
-        exit(1);
+        std::exit(1);
     }
 
     init();
 }
 
-Diffusion::~Diffusion() {
-    delete scheme;
-}
-
 void Diffusion::init() {
-    double *u0 = mesh->getU0();
+    auto& u0 = mesh.getU0();
 
-    int x_max = mesh->getNx()[0];
-    int y_max = mesh->getNx()[1];
+    const int x_max = mesh.getNx()[0];
+    const int y_max = mesh.getNx()[1];
 
-    double *cellx = mesh->getCellX();
-    double *celly = mesh->getCellY();
+    const auto& cellx = mesh.getCellX();
+    const auto& celly = mesh.getCellY();
 
-    int nx = x_max + 2;
+    const int nx = x_max + 2;
 
     if (!subregion.empty()) {
         for (int j = 0; j < y_max + 2; j++) {
@@ -62,6 +54,6 @@ void Diffusion::init() {
     scheme->init();
 }
 
-void Diffusion::doCycle(const double dt) {
+void Diffusion::doCycle(const double& dt) const {
     scheme->doAdvance(dt);
 }

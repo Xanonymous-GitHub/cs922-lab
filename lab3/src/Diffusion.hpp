@@ -1,26 +1,33 @@
-#ifndef DIFFUSION_H_
-#define DIFFUSION_H_
-
-#include <vector>
+#pragma once
 
 #include "InputFile.hpp"
 #include "Mesh.hpp"
 #include "Scheme.hpp"
 
-class Diffusion {
-private:
-    Mesh *mesh;
+#include <memory>
+#include <vector>
 
-    Scheme *scheme;
+class Diffusion final {
+    Mesh mesh;
 
-    std::vector<double> subregion;
+    std::unique_ptr<Scheme> scheme{};
+
+    std::vector<double> subregion{};
 
 public:
-    Diffusion(const InputFile *input, Mesh *m);
+    Diffusion() const = delete;
 
-    ~Diffusion();
+    Diffusion(const Diffusion& other) const = delete;
+
+    Diffusion(Diffusion&& other) const = delete;
+
+    Diffusion& operator=(const Diffusion& other) const = delete;
+
+    Diffusion(const InputFile& input, const Mesh& m);
+
+    ~Diffusion() const = default;
 
     void init();
-    void doCycle(const double dt);
+
+    void doCycle(const double& dt) const;
 };
-#endif
