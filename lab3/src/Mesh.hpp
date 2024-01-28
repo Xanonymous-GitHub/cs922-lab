@@ -1,8 +1,9 @@
 #pragma once
 
+#include "InputFile.hpp"
+
 #include <array>
 #include <vector>
-#include "InputFile.hpp"
 
 #define NDIM 2
 
