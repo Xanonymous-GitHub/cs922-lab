@@ -28,17 +28,6 @@ class Mesh final {
 
     bool allocated = false;
 
-    [[nodiscard]]
-    static constexpr int poly2(
-        const int& i,
-        const int& j,
-        const int& imin,
-        const int& jmin,
-        const int& ni
-    ) {
-        return i - imin + (j - jmin) * ni;
-    }
-
 public:
     Mesh() const = delete;
 
@@ -84,4 +73,15 @@ public:
 
     [[nodiscard]]
     double getTotalTemperature() const;
+
+    [[nodiscard]]
+    static constexpr int poly2(
+        const int& i,
+        const int& j,
+        const int& imin,
+        const int& jmin,
+        const int& ni
+    ) {
+        return i - imin + (j - jmin) * ni;
+    }
 };
