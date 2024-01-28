@@ -42,13 +42,11 @@ Driver::Driver(const InputFile& input, const std::string& problem_name)
 }
 
 void Driver::run() const {
-    int step = 0;
+    int step = 1;
     double t_current = t_start;
 
-    while (t_current < t_end) {
+    for (; t_current < t_end; ++step) {
         t_current += dt;
-
-        step = static_cast<int>(t_current / dt);
 
         std::cout << "+ step: " << step << ", dt:   " << dt << std::endl;
 
