@@ -4,7 +4,6 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#include <unordered_map>
 
 InputFile::InputFile(const std::string& filename) {
     std::ifstream ifs{filename};
