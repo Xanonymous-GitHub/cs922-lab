@@ -1,23 +1,33 @@
-#ifndef EXPLICIT_SCHEME_H_
-#define EXPLICIT_SCHEME_H_
+#pragma once
 
-#include "InputFile.hpp"
+#include "Mesh.hpp"
 #include "Scheme.hpp"
 
-class ExplicitScheme : public Scheme {
-private:
-    Mesh *mesh;
+class ExplicitScheme final : public Scheme {
+    Mesh mesh;
 
     void updateBoundaries();
+
     void reset();
-    void diffuse(double dt);
-    void reflectBoundaries(int boundary_id);
+
+    void diffuse(const double& dt);
+
+    void reflectBoundaries(const int& boundary_id);
 
 public:
-    ExplicitScheme(const InputFile *input, Mesh *m);
+    ExplicitScheme() const = delete;
 
-    void doAdvance(const double dt);
+    ExplicitScheme(const ExplicitScheme& other) const = delete;
 
-    void init();
+    ExplicitScheme(ExplicitScheme&& other) const = delete;
+
+    ExplicitScheme& operator=(const ExplicitScheme& other) const = delete;
+
+    explicit ExplicitScheme(const Mesh& m) const;
+
+    ~ExplicitScheme() const override = default;
+
+    void doAdvance(const double& dt) override;
+
+    void init() override;
 };
-#endif
