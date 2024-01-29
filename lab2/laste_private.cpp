@@ -3,13 +3,13 @@
 #include <iostream>
 
 int main(const int argc, char const *argv[]) {
-    int a = 0;
-
     omp_set_dynamic(false);
     omp_set_num_threads(4);
 
-#pragma omp parallel shared(a)
+#pragma omp parallel
     {
+        int a = 0;
+
 #pragma omp single
         std::cout << "number of thread: " << omp_get_num_threads() << '\n';
 
@@ -23,7 +23,7 @@ int main(const int argc, char const *argv[]) {
         }
     }
 
-    std::cout << "final a = " << a << '\n';
+    // std::cout << "final a = " << a << '\n';
 
     return 0;
 }
