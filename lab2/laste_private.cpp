@@ -3,17 +3,17 @@
 #include <iostream>
 
 int main(const int argc, char const *argv[]) {
+    int a = 0;
+
     omp_set_dynamic(false);
     omp_set_num_threads(4);
 
-#pragma omp parallel
+#pragma omp parallel shared(a)
     {
-        int a = 0;
-
 #pragma omp single
         std::cout << "number of thread: " << omp_get_num_threads() << '\n';
 
-#pragma omp for
+#pragma omp for firstprivate(a) schedule(static)
         for (int i = 0; i < 10; ++i) {
 #pragma omp critical
             std::cout
