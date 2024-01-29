@@ -1,7 +1,6 @@
 #include <omp.h>
 
 #include <iostream>
-#include <sstream>
 
 int main(const int argc, char const *argv[]) {
     int a = 0;
@@ -17,20 +16,10 @@ int main(const int argc, char const *argv[]) {
 #pragma omp for private(a)
         for (int i = 0; i < 10; ++i) {
 #pragma omp critical
-            {
-                auto s = std::stringstream{};
-
-                s << "previous a = " << a << '\n';
-
-                a += 1;
-                s << "current a = " << a << '\n';
-
-                const int tid = omp_get_thread_num();
-                s << "tid = " << tid << '\n'
-                  << '\n';
-
-                std::cout << s.str();
-            }
+            std::cout
+                << "previous a = " << a++ << '\n'
+                << "current a = " << a << '\n'
+                << "tid = " << omp_get_thread_num() << "\n\n";
         }
     }
 
