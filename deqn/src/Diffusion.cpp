@@ -7,14 +7,14 @@ Diffusion::Diffusion(const InputFile& input, const std::shared_ptr<Mesh>& m) : m
     if (const std::string scheme_str = input.getString("scheme", "explicit"); scheme_str == "explicit") {
         scheme = std::make_unique<ExplicitScheme>(mesh);
     } else {
-        std::cerr << "Error: unknown scheme \"" << scheme_str << "\"" << std::endl;
+        std::cerr << "Error: unknown scheme \"" << scheme_str << "\"" << '\n';
         std::exit(1);
     }
 
     subregion = input.getDoubleList("subregion", std::vector<double>{});
 
     if (!subregion.empty() && subregion.size() != 4) {
-        std::cerr << "Error:  region must have 4 entries (xmin, ymin, xmax, ymax)" << std::endl;
+        std::cerr << "Error:  region must have 4 entries (xmin, ymin, xmax, ymax)" << '\n';
         std::exit(1);
     }
 

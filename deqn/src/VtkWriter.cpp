@@ -19,7 +19,7 @@ VtkWriter::VtkWriter(std::string basename, const std::shared_ptr<Mesh>& mesh)
 
     file.open(fname.str());
 
-    file << "!NBLOCKS " << 1 << std::endl;
+    file << "!NBLOCKS " << 1 << '\n';
 
     file.close();
 }
@@ -43,7 +43,7 @@ void VtkWriter::write(const int& step, const double& time) const {
             << step
             << "."
             << 1
-            << ".vtk" << std::endl;
+            << ".vtk" << '\n';
 
     writeVtk(step, time);
 
@@ -70,52 +70,52 @@ void VtkWriter::writeVtk(const int& step, const double& time) const {
 
     file << vtk_header;
 
-    file << "DATASET RECTILINEAR_GRID" << std::endl;
-    file << "FIELD FieldData 2" << std::endl;
-    file << "TIME 1 1 double" << std::endl;
-    file << time << std::endl;
-    file << "CYCLE 1 1 int" << std::endl;
-    file << step << std::endl;
+    file << "DATASET RECTILINEAR_GRID" << '\n';
+    file << "FIELD FieldData 2" << '\n';
+    file << "TIME 1 1 double" << '\n';
+    file << time << '\n';
+    file << "CYCLE 1 1 int" << '\n';
+    file << step << '\n';
 
     if (Mesh::getDim() == 2) {
         file
                 << "DIMENSIONS " << mesh->getNx()[0] + 1
                 << " " << mesh->getNx()[1] + 1
                 << " 1"
-                << std::endl;
+                << '\n';
     } else if (Mesh::getDim() == 3) {
         file
                 << "DIMENSIONS " << mesh->getNx()[0] + 1
                 << " " << mesh->getNx()[1] + 1
                 << " " << mesh->getNx()[2] + 1
-                << std::endl;
+                << '\n';
     }
 
-    file << "X_COORDINATES " << mesh->getNx()[0] + 1 << " float" << std::endl;
+    file << "X_COORDINATES " << mesh->getNx()[0] + 1 << " float" << '\n';
     for (int i = 1; i <= mesh->getNx()[0] + 1; i++) {
         file << mesh->getCellX()[i] << " ";
     }
 
-    file << std::endl;
+    file << '\n';
 
-    file << "Y_COORDINATES " << mesh->getNx()[1] + 1 << " float" << std::endl;
+    file << "Y_COORDINATES " << mesh->getNx()[1] + 1 << " float" << '\n';
     for (int j = 1; j <= mesh->getNx()[1] + 1; j++) {
         file << mesh->getCellY()[j] << " ";
     }
 
-    file << std::endl;
+    file << '\n';
 
-    file << "Z_COORDINATES 1 float" << std::endl;
-    file << "0.0000" << std::endl;
-    file << "CELL_DATA " << mesh->getNx()[0] * mesh->getNx()[1] << std::endl;
-    file << "FIELD FieldData 1" << std::endl;
-    file << "u 1 " << mesh->getNx()[0] * mesh->getNx()[1] << " double" << std::endl;
+    file << "Z_COORDINATES 1 float" << '\n';
+    file << "0.0000" << '\n';
+    file << "CELL_DATA " << mesh->getNx()[0] * mesh->getNx()[1] << '\n';
+    file << "FIELD FieldData 1" << '\n';
+    file << "u 1 " << mesh->getNx()[0] * mesh->getNx()[1] << " double" << '\n';
 
     for (int j = 1; j <= mesh->getNx()[1]; j++) {
         for (int i = 1; i <= mesh->getNx()[0]; i++) {
             file << mesh->getU0()[i + j * (mesh->getNx()[0] + 2)] << " ";
         }
-        file << std::endl;
+        file << '\n';
     }
 
     file.close();

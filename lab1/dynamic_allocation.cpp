@@ -19,7 +19,7 @@ int main(int argc, char const* argv[]) {
     auto it = arr.crbegin();
     it += SIZE - i;
     for (; it != arr.crend(); ++it) {
-        std::cout << *it << std::endl;
+        std::cout << *it << '\n';
     }
 
     return 0;

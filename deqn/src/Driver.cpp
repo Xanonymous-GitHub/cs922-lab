@@ -7,11 +7,11 @@ Driver::Driver(const InputFile& input, const std::string& problem_name)
       diffusion{input, mesh},
       writer{problem_name, mesh},
       _problem_name(problem_name) {
-    std::cout << "+++++++++++++++++++++" << std::endl;
-    std::cout << "  Running deqn v0.1 (Refactored by Xanonymous)  " << std::endl;
+    std::cout << "+++++++++++++++++++++" << '\n';
+    std::cout << "  Running deqn v0.1 (Refactored by Xanonymous)  " << '\n';
 
 #ifdef DEBUG
-    std::cout << "- input file: " << problem_name << std::endl;
+    std::cout << "- input file: " << problem_name << '\n';
 #endif
 
     dt_max = input.getDouble("dt_max", 0.2);
@@ -24,16 +24,16 @@ Driver::Driver(const InputFile& input, const std::string& problem_name)
     summary_frequency = input.getInt("summary_frequency", 1);
 
 #ifdef DEBUG
-    std::cout << "- dt_max: " << dt_max << std::endl;
-    std::cout << "- initial_dt: " << dt << std::endl;
-    std::cout << "- start_time: " << t_start << std::endl;
-    std::cout << "- end_time: " << t_end << std::endl;
-    std::cout << "- vis_frequency: " << vis_frequency << std::endl;
-    std::cout << "- summary_frequency: " << summary_frequency << std::endl;
+    std::cout << "- dt_max: " << dt_max << '\n';
+    std::cout << "- initial_dt: " << dt << '\n';
+    std::cout << "- start_time: " << t_start << '\n';
+    std::cout << "- end_time: " << t_end << '\n';
+    std::cout << "- vis_frequency: " << vis_frequency << '\n';
+    std::cout << "- summary_frequency: " << summary_frequency << '\n';
 #endif
 
-    std::cout << "+++++++++++++++++++++" << std::endl;
-    std::cout << std::endl;
+    std::cout << "+++++++++++++++++++++" << '\n';
+    std::cout << '\n';
 
     /* Initial mesh dump */
     if (vis_frequency != -1) {
@@ -48,7 +48,7 @@ void Driver::run() const {
     for (; t_current < t_end; ++step) {
         t_current += dt;
 
-        std::cout << "+ step: " << step << ", dt:   " << dt << std::endl;
+        std::cout << "+ step: " << step << ", dt:   " << dt << '\n';
 
         diffusion.doCycle(dt);
 
@@ -58,7 +58,7 @@ void Driver::run() const {
 
         if (step % summary_frequency == 0 && summary_frequency != -1) {
             const double temperature = mesh->getTotalTemperature();
-            std::cout << "+\tcurrent total temperature: " << temperature << std::endl;
+            std::cout << "+\tcurrent total temperature: " << temperature << '\n';
         }
     }
 
@@ -66,8 +66,8 @@ void Driver::run() const {
         writer.write(step, t_current);
     }
 
-    std::cout << std::endl;
-    std::cout << "+++++++++++++++++++++" << std::endl;
-    std::cout << "   Run completete.   " << std::endl;
-    std::cout << "+++++++++++++++++++++" << std::endl;
+    std::cout << '\n';
+    std::cout << "+++++++++++++++++++++" << '\n';
+    std::cout << "   Run completete.   " << '\n';
+    std::cout << "+++++++++++++++++++++" << '\n';
 }

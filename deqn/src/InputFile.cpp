@@ -9,7 +9,7 @@ InputFile::InputFile(const std::string& filename) {
     std::ifstream ifs{filename};
 
     if (!ifs.good()) {
-        std::cerr << "File " << filename << " not found!" << std::endl;
+        std::cerr << "File " << filename << " not found!" << '\n';
         std::exit(1);
     }
 
@@ -31,8 +31,7 @@ InputFile::InputFile(const std::string& filename) {
         }
 
         if (pairs.contains(key)) {
-            std::cerr << "Duplicate key " << key << " in input file" << std::endl;
-            std::exit(1);
+            std::cerr << "Duplicate key " << key << " in input file" << '\n';
         }
 
         std::string val;

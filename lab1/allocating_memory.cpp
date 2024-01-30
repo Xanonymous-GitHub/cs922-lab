@@ -6,7 +6,7 @@
 
 int main(int argc, char const *argv[]) {
     const auto my_array = std::array<int, 5>{10, 11, 12, 14, 15};
-    std::cout << "The first element is: " << my_array.front() << std::endl;
+    std::cout << "The first element is: " << my_array.front() << '\n';
 
     const int *my_malloc_array;
     my_malloc_array = reinterpret_cast<const int *>(std::malloc(SIZE * sizeof(const int)));
@@ -17,7 +17,7 @@ int main(int argc, char const *argv[]) {
         }
 
         for (int i = 0; i < SIZE; i++) {
-            std::cout << my_malloc_array[i] << std::endl;
+            std::cout << my_malloc_array[i] << '\n';
         }
     }
 

@@ -34,9 +34,9 @@ int main(int argc, char const* argv[]) {
         << "With n = " << n
         << std::setprecision(16)
         << " trapezoids, estimate: " << integral
-        << std::endl;
+        << '\n';
 
-    std::cout << "Time: " << end_time - start_time << std::endl;
+    std::cout << "Time: " << end_time - start_time << '\n';
 
     return 0;
 }

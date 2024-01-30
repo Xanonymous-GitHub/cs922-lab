@@ -129,6 +129,6 @@ void ExplicitScheme::reflectBoundaries(const int& boundary_id) const {
         }
 
         default:
-            std::cerr << "Error in reflectBoundaries(): unknown boundary id (" << boundary_id << ")" << std::endl;
+            std::cerr << "Error in reflectBoundaries(): unknown boundary id (" << boundary_id << ")" << '\n';
     }
 }

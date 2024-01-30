@@ -14,7 +14,7 @@ int main(const int argc, char const *argv[]) {
 #pragma omp single
         std::cout << "number of thread: " << omp_get_num_threads() << '\n';
 
-#pragma omp for lastprivate(a) schedule(static) nowait ordered
+#pragma omp for lastprivate(a) schedule(static)
         for (int i = 0; i < 10; ++i) {
 #pragma omp critical
             {

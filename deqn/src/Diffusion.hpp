@@ -4,7 +4,6 @@
 #include "Mesh.hpp"
 #include "Scheme.hpp"
 
-#include <memory>
 #include <vector>
 
 class Diffusion final {

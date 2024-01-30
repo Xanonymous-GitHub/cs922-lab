@@ -2,7 +2,6 @@
 
 #include "Mesh.hpp"
 
-#include <memory>
 #include <string>
 
 class VtkWriter final {
