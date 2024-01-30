@@ -5,6 +5,7 @@
 #include "Mesh.hpp"
 #include "VtkWriter.hpp"
 
+// ReSharper disable once CppUnusedIncludeDirective
 #include <memory>
 #include <string>
 

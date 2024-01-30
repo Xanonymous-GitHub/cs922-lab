@@ -4,6 +4,7 @@
 #include "Mesh.hpp"
 #include "Scheme.hpp"
 
+// ReSharper disable once CppUnusedIncludeDirective
 #include <memory>
 #include <vector>
 

@@ -3,6 +3,7 @@
 #include "Mesh.hpp"
 #include "Scheme.hpp"
 
+// ReSharper disable once CppUnusedIncludeDirective
 #include <memory>
 
 class ExplicitScheme final : public Scheme {

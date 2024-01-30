@@ -2,6 +2,7 @@
 
 #include "Mesh.hpp"
 
+// ReSharper disable once CppUnusedIncludeDirective
 #include <memory>
 #include <string>
 
