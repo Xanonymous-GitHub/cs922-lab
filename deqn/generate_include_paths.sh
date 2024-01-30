@@ -29,9 +29,12 @@ get_include_paths() {
         # 'path' will contain the resolved absolute path to the executable.
         path="$(readlink -f "$(which "$executable_name")")"
 
+        # Extract the directory path from the executable path
+        dir_path="$(dirname "$path")"
+
         # Use 'realpath' to convert relative paths (../../include) into absolute paths.
         # The '2>/dev/null' part suppresses error messages from 'realpath' in case of failure.
-        true_path="$(realpath "$path"/../../include 2>/dev/null)"
+        true_path="$(realpath "$dir_path"/../include 2>/dev/null)"
 
         # Check if 'true_path' is non-empty and is a directory.
         # If so, print it; otherwise, continue to the next iteration.
