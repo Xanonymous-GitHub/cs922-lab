@@ -3,6 +3,8 @@
 #include "Mesh.hpp"
 #include "Scheme.hpp"
 
+#include <memory>
+
 class ExplicitScheme final : public Scheme {
     const std::shared_ptr<Mesh> mesh{};
 
