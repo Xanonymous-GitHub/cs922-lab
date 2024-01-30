@@ -19,20 +19,18 @@
 get_include_paths() {
     # Loop through each argument provided to the function
     for executable_name in "$@"; do
+        # Check if the executable exists in the PATH
+        if ! type "$executable_name" > /dev/null 2>&1; then
+            continue
+        fi
+
         # Find the absolute path of the executable using 'which',
         # then use 'readlink' to resolve any symbolic links.
         # 'path' will contain the resolved absolute path to the executable.
         path="$(readlink -f "$(which "$executable_name")")"
 
-        # Check if the 'path' variable is non-empty; if empty, skip to the next iteration.
-        # This situation can occur if the executable is not found.
-        if [ -z "$path" ]; then
-            continue
-        fi
-
         # Use 'realpath' to convert relative paths (../../include) into absolute paths.
-        # The '2>/dev/null' part suppresses error messages from 'realpath' in case of failure,
-        # e.g., if the path does not exist.
+        # The '2>/dev/null' part suppresses error messages from 'realpath' in case of failure.
         true_path="$(realpath "$path"/../../include 2>/dev/null)"
 
         # Check if 'true_path' is non-empty and is a directory.
