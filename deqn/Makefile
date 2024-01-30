@@ -4,6 +4,8 @@ PRODUCT := deqn
 
 SRCDIR := src
 
+CXXINCLUDES := $(shell sh generate_include_paths.sh | sed 's/^/-I/')
+
 HDRS := $(wildcard $(SRCDIR)/*.hpp)
 
 CSRCS := $(wildcard $(SRCDIR)/*.cpp)
