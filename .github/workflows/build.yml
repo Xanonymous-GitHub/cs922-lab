@@ -32,6 +32,6 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Install OpenMPI
-      run: apt install -y libopenmpi-dev openmpi-bin openmpi-common
+      run: sudo apt install -y libopenmpi-dev openmpi-bin openmpi-common
     - name: make deqn
       run: cd deqn && make
