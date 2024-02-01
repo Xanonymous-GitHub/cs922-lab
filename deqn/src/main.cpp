@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <mpi.h>
 #include <string>
 
 int main(const int argc, const char* argv[]) {
@@ -32,8 +33,18 @@ int main(const int argc, const char* argv[]) {
 
     problem_name = problem_name.substr(last_sep, problem_name.size());
 
-    const Driver driver{input, problem_name};
-    driver.run();
+    MPI_Init(&const_cast<int &>(argc), const_cast<char ***>(&argv));
+    const auto& has_initialized = std::make_unique<int>(0);
+    MPI_Initialized(has_initialized.get());
+
+    if (static_cast<bool>(*has_initialized)) {
+        const Driver driver{input, problem_name};
+        driver.run();
+        MPI_Finalize();
+    } else {
+        std::cerr << "Error: MPI has not been initialized" << '\n';
+        std::exit(1);
+    }
 
     return 0;
 }
