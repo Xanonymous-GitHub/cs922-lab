@@ -4,19 +4,27 @@
 # These include path may be different on different machines.
 # Basically, this is a workaround for CLion's inability to parse include paths in a Makefile project.
 
-# Function: get_include_paths
+# Function: get_module_paths
 # Description:
-#   This function takes a list of executable names and generates the corresponding
-#   include paths. The paths are derived based on the location of the executables.
+#   This function takes expected sub-dir name a list of executable names and generates the corresponding
+#   module sub-dir paths. The paths are derived based on the location of the executables.
 #   If the derived path is valid and exists, it is printed to stdout.
 #
 # Arguments:
+#   $1 - expected sub-directory name (e.g., include, lib, bin).
 #   $@ - List of executable names (e.g., mpic++, g++, g++-13).
 #
 # Output:
-#   Absolute paths to the include directories, one per line.
+#   Absolute paths to the module sub-directories, one per line.
 #
-get_include_paths() {
+get_module_paths() {
+    # Check if the expected sub-directory name is provided
+    sub_dir_name="$1"
+    if [ -z "$sub_dir_name" ]; then
+        # If not, directly return.
+        return 0
+    fi
+
     # Loop through each argument provided to the function
     for executable_name in "$@"; do
         # Check if the executable exists in the PATH
@@ -34,7 +42,7 @@ get_include_paths() {
 
         # Use 'realpath' to convert relative paths (../../include) into absolute paths.
         # The '2>/dev/null' part suppresses error messages from 'realpath' in case of failure.
-        true_path="$(realpath "$dir_path"/../include 2>/dev/null)"
+        true_path="$(realpath "$dir_path"/../"$sub_dir_name" 2>/dev/null)"
 
         # Check if 'true_path' is non-empty and is a directory.
         # If so, print it; otherwise, continue to the next iteration.
@@ -44,4 +52,4 @@ get_include_paths() {
     done
 }
 
-get_include_paths mpic++ g++ g++-13
+get_module_paths "$1" mpic++ g++ g++-13
