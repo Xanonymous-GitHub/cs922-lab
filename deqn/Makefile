@@ -4,7 +4,8 @@ PRODUCT := deqn
 
 SRCDIR := src
 
-CXXINCLUDES := $(shell sh generate_include_paths.sh | sed 's/^/-I/')
+CXXINCLUDES := $(shell sh generate_module_paths.sh 'include' | sed 's/^/-I/')
+CXXLIBS := $(shell sh generate_module_paths.sh 'lib' | sed 's/^/-L/')
 
 HDRS := $(wildcard $(SRCDIR)/*.hpp)
 
@@ -26,6 +27,7 @@ endif
 CXXFLAGS_DEBUG := -g -DDEBUG
 CXXFLAGS_OPT := -O3
 CXXFLAGS_OPENMP := -fopenmp
+CXXFLAGS_OPENMPI := -lmpi
 CXXFLAGS_STANDARD := -std=c++2a
 
 LD := $(CXX)
@@ -43,7 +45,7 @@ all : $(BINARY)
 $(BINARY) : $(OBJS)
 	@echo linking $@
 	$(maketargetdir)
-	$(LD) $(LDFLAGS) $(CXXFLAGS_STANDARD) -o $@ $^
+	$(LD) $(LDFLAGS) $(CXXFLAGS_STANDARD) $(CXXLIBS) $(CXXFLAGS_OPENMPI) -o $@ $^
 
 $(BUILDDIR)/%.o : $(SRCDIR)/%.cpp
 	@echo compiling $<
