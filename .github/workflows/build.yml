@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: make lab1
       run: cd lab1 && make
 
@@ -21,17 +21,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: make lab2
       run: cd lab2 && make
 
+# FIXME: How to install OpenMPI? ??? How a bad official documentation is! ........ trash....
   deqn-build:
 
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Install OpenMPI
-      run: sudo apt install -y libopenmpi-dev openmpi-bin openmpi-common
+      run: sudo apt update -y && sudo apt install -y openmpi-bin libopenmpi-dev
     - name: make deqn
       run: cd deqn && make

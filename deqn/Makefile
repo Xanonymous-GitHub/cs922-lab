@@ -4,8 +4,8 @@ PRODUCT := deqn
 
 SRCDIR := src
 
-CXXINCLUDES := $(shell sh generate_module_paths.sh 'include' | sed 's/^/-I/')
-CXXLIBS := $(shell sh generate_module_paths.sh 'lib' | sed 's/^/-L/')
+CXXINCLUDES := $(shell bash generate_module_paths.bash 'include' | sed 's/^/-I/')
+CXXLIBS := $(shell bash generate_module_paths.bash 'lib' | sed 's/^/-L/')
 
 HDRS := $(wildcard $(SRCDIR)/*.hpp)
 
@@ -18,16 +18,10 @@ OBJS += $(FSRCS:$(SRCDIR)/fortran/%.f90=$(BUILDDIR)/%.o)
 BINARY := $(BUILDDIR)/$(PRODUCT)
 
 # g++ flags:
-UNAME_S := $(shell uname -s)
-ifeq ($(UNAME_S), Darwin)
-    CXX := clang++
-else
-    CXX := g++
-endif
+CXX := mpic++
 CXXFLAGS_DEBUG := -g -DDEBUG
 CXXFLAGS_OPT := -O3
 CXXFLAGS_OPENMP := -fopenmp
-CXXFLAGS_OPENMPI := -lmpi
 CXXFLAGS_STANDARD := -std=c++2a
 
 LD := $(CXX)
@@ -45,7 +39,7 @@ all : $(BINARY)
 $(BINARY) : $(OBJS)
 	@echo linking $@
 	$(maketargetdir)
-	$(LD) $(LDFLAGS) $(CXXFLAGS_STANDARD) $(CXXLIBS) $(CXXFLAGS_OPENMPI) -o $@ $^
+	$(LD) $(LDFLAGS) $(CXXFLAGS_STANDARD) -o $@ $^
 
 $(BUILDDIR)/%.o : $(SRCDIR)/%.cpp
 	@echo compiling $<

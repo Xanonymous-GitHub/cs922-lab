@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 # We use this file to put all possible include paths for the compiler
 # These include path may be different on different machines.
@@ -32,13 +32,18 @@ get_module_paths() {
             continue
         fi
 
-        # Find the absolute path of the executable using 'which',
-        # then use 'readlink' to resolve any symbolic links.
-        # 'path' will contain the resolved absolute path to the executable.
-        path="$(readlink -f "$(which "$executable_name")")"
+        # Initialize the target link to the executable
+        target_link="$(which "$executable_name")"
+
+        # Try to resolve the target link using readlink -f
+        resolved_link=$(readlink -f "$target_link" 2>/dev/null)
+
+        if [ -n "$resolved_link" ]; then
+            target_link="$resolved_link"
+        fi
 
         # Extract the directory path from the executable path
-        dir_path="$(dirname "$path")"
+        dir_path="$(dirname "$target_link")"
 
         # Use 'realpath' to convert relative paths (../../include) into absolute paths.
         # The '2>/dev/null' part suppresses error messages from 'realpath' in case of failure.
