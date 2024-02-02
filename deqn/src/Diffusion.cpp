@@ -1,3 +1,5 @@
+// TODO: remove the following rule disable and fix the issue
+// ReSharper disable CppDFAUnusedValue CppDFAUnreadVariable CppDFALoopConditionNotUpdated
 #include "Diffusion.hpp"
 #include "ExplicitScheme.hpp"
 
@@ -32,21 +34,23 @@ void Diffusion::init() const {
 
     const int nx = x_max + 2;
 
-    if (!subregion.empty()) {
+#pragma omp parallel default(none) shared(u0, x_max, y_max, cellx, celly, subregion, nx)
+    {
+#pragma omp for collapse(2) schedule(static) nowait
         for (int j = 0; j < y_max + 2; j++) {
             for (int i = 0; i < x_max + 2; i++) {
-                if (celly[j] > subregion[1] && celly[j] <= subregion[3] &&
-                    cellx[i] > subregion[0] && cellx[i] <= subregion[2]) {
-                    u0[i + j * nx] = 10.0;
-                } else {
-                    u0[i + j * nx] = 0.0;
+#pragma omp critical
+                {
+                    if (
+                        !subregion.empty() &&
+                        celly[j] > subregion[1] && celly[j] <= subregion[3] &&
+                        cellx[i] > subregion[0] && cellx[i] <= subregion[2]
+                    ) {
+                        u0[i + j * nx] = 10.0;
+                    } else {
+                        u0[i + j * nx] = 0.0;
+                    }
                 }
-            }
-        }
-    } else {
-        for (int j = 0; j < y_max + 2; j++) {
-            for (int i = 0; i < x_max + 2; i++) {
-                u0[i + j * nx] = 0.0;
             }
         }
     }
