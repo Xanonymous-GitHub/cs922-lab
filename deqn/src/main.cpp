@@ -13,6 +13,9 @@ int main(const int argc, const char* argv[]) {
         std::exit(1);
     }
 
+    std::ios_base::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+
     const std::string filename = argv[1];
 
     const InputFile input{filename};
