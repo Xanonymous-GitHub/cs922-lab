@@ -121,11 +121,8 @@ double Mesh::getTotalTemperature() const {
 #pragma omp for collapse(2) schedule(static) reduction(+ : temperature) nowait
         for (int k = y_min; k <= y_max; k++) {
             for (int j = x_min; j <= x_max; j++) {
-#pragma omp critical
-                {
-                    const int n1 = poly2(j, k, x_min - 1, y_min - 1, nx);
-                    temperature += u0[n1];
-                }
+                const int n1 = poly2(j, k, x_min - 1, y_min - 1, nx);
+                temperature += u0[n1];
             }
         }
     }
