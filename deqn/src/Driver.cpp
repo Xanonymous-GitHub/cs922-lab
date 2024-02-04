@@ -37,7 +37,7 @@ Driver::Driver(const InputFile& input, const std::string& problem_name)
 
     /* Initial mesh dump */
     if (vis_frequency != -1) {
-        writer.write(0, 0.0);
+        writer.writeVtk(0, 0.0);
     }
 }
 
@@ -53,7 +53,7 @@ void Driver::run() const {
         diffusion.doCycle(dt);
 
         if (step % vis_frequency == 0 && vis_frequency != -1) {
-            writer.write(step, t_current);
+            writer.writeVtk(step, t_current);
         }
 
         if (step % summary_frequency == 0 && summary_frequency != -1) {
@@ -63,8 +63,12 @@ void Driver::run() const {
     }
 
     if (step % vis_frequency != 0 && vis_frequency != -1) {
-        writer.write(step, t_current);
+        writer.writeVtk(step, t_current);
+        writer.writeVisited(step);
+    } else {
+        writer.writeVisited(step - 1);
     }
+
 
     std::cout << '\n';
     std::cout << "+++++++++++++++++++++" << '\n';
