@@ -20,7 +20,7 @@ BINARY := $(BUILDDIR)/$(PRODUCT)
 # g++ flags:
 CXX := mpic++
 CXXFLAGS_DEBUG := -g -DDEBUG
-CXXFLAGS_OPT := -O3 -finline-functions -m64 -funroll-loops -fvectorize -ftree-vectorize
+CXXFLAGS_OPT := -O3 -finline-functions -m64 -funroll-loops
 CXXFLAGS_OPENMP := -fopenmp
 CXXFLAGS_STANDARD := -std=c++2a
 CXXFLAGS_OTHER := -Wall -Wextra -Wpedantic
