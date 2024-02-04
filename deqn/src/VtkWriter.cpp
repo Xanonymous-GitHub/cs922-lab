@@ -46,7 +46,7 @@ void VtkWriter::writeVtk(const int& step, const double& time) const {
             y_coord_texts[i] = oss.view();
         }
 
-#pragma omp for schedule(static)
+#pragma omp for nowait schedule(static)
         for (int j = 1; j <= cell_data_y; j++) {
             std::ostringstream oss;
             oss.precision(8);
