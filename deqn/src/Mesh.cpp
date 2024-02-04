@@ -47,12 +47,17 @@ void Mesh::allocate() {
     const double xmin = min_coords[0];
     const double ymin = min_coords[1];
 
-    for (int i = 0; i < cellx.size(); ++i) {
-        cellx[i] = xmin + dx[0] * (i - 1);
-    }
+#pragma omp parallel default(none) shared(cellx, celly, dx, xmin, ymin)
+    {
+#pragma omp for schedule(static) nowait
+        for (int i = 0; i < cellx.size(); ++i) {
+            cellx[i] = xmin + dx[0] * (i - 1);
+        }
 
-    for (int i = 0; i < celly.size(); ++i) {
-        celly[i] = ymin + dx[1] * (i - 1);
+#pragma omp for schedule(static) nowait
+        for (int i = 0; i < celly.size(); ++i) {
+            celly[i] = ymin + dx[1] * (i - 1);
+        }
     }
 
     allocated = true;
