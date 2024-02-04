@@ -50,12 +50,12 @@ void Mesh::allocate() {
 #pragma omp parallel default(none) shared(cellx, celly, dx, xmin, ymin)
     {
 #pragma omp for schedule(static) nowait
-        for (int i = 0; i < cellx.size(); ++i) {
+        for (int i = 0; i < static_cast<int>(cellx.size()); ++i) {
             cellx[i] = xmin + dx[0] * (i - 1);
         }
 
 #pragma omp for schedule(static) nowait
-        for (int i = 0; i < celly.size(); ++i) {
+        for (int i = 0; i < static_cast<int>(celly.size()); ++i) {
             celly[i] = ymin + dx[1] * (i - 1);
         }
     }
