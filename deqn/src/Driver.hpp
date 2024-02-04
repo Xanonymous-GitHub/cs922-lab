@@ -1,39 +1,36 @@
-#pragma once
+#ifndef DRIVER_H_
+#define DRIVER_H_
+
+#include <string>
 
 #include "Diffusion.hpp"
 #include "InputFile.hpp"
 #include "Mesh.hpp"
 #include "VtkWriter.hpp"
 
-// ReSharper disable once CppUnusedIncludeDirective
-#include <memory>
-#include <string>
+class Driver {
+private:
+    InputFile *input;
+    Mesh *mesh;
+    Diffusion *diffusion;
+    VtkWriter *writer;
 
-class Driver final {
-    const std::shared_ptr<Mesh> mesh{};
+    double t_start;
+    double t_end;
+    double dt_max;
 
-    const Diffusion diffusion;
+    double dt;
 
-    const VtkWriter writer;
+    std::string problem_name;
 
-    const std::string _problem_name;
-
-    double t_start, t_end, dt_max, dt;
-
-    int vis_frequency, summary_frequency;
+    int vis_frequency;
+    int summary_frequency;
 
 public:
-    Driver() = delete;
+    Driver(const InputFile *input, const std::string &problem_name);
 
-    Driver(const Driver& other) = delete;
+    ~Driver();
 
-    Driver(Driver&& other) = delete;
-
-    Driver& operator=(const Driver& other) const = delete;
-
-    Driver(const InputFile& input, const std::string& problem_name);
-
-    ~Driver() = default;
-
-    void run() const;
+    void run();
 };
+#endif

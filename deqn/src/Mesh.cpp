@@ -1,85 +1,91 @@
-// TODO: remove the following rule disable and fix the issue
-// ReSharper disable CppDFAUnusedValue CppDFAUnreadVariable CppDFALoopConditionNotUpdated
 #include "Mesh.hpp"
 
-Mesh::Mesh(const InputFile& inputFile) {
-    const int nx = inputFile.getInt("nx", 0);
-    const int ny = inputFile.getInt("ny", 0);
+#include <cstdlib>
+#include <iostream>
 
-    min_coords[0] = inputFile.getDouble("xmin", 0.0);
-    max_coords[0] = inputFile.getDouble("xmax", 1.0);
-    min_coords[1] = inputFile.getDouble("ymin", 0.0);
-    max_coords[1] = inputFile.getDouble("ymax", 1.0);
+#define POLY2(i, j, imin, jmin, ni) (((i) - (imin)) + ((j) - (jmin)) * (ni))
+
+Mesh::Mesh(const InputFile *input) : input(input) {
+    allocated = false;
+
+    NDIM = 2;
+
+    n = new int[NDIM];
+    min = new int[NDIM];
+    max = new int[NDIM];
+    dx = new double[NDIM];
+
+    int nx = input->getInt("nx", 0);
+    int ny = input->getInt("ny", 0);
+
+    min_coords = new double[NDIM];
+    max_coords = new double[NDIM];
+
+    min_coords[0] = input->getDouble("xmin", 0.0);
+    max_coords[0] = input->getDouble("xmax", 1.0);
+    min_coords[1] = input->getDouble("ymin", 0.0);
+    max_coords[1] = input->getDouble("ymax", 1.0);
 
     // setup first dimension.
     n[0] = nx;
     min[0] = 1;
     max[0] = nx;
 
-    dx[0] = (max_coords[0] - min_coords[0]) / nx;
+    dx[0] = ((double)max_coords[0] - min_coords[0]) / nx;
 
     // setup second dimension.
     n[1] = ny;
     min[1] = 1;
     max[1] = ny;
 
-    dx[1] = (max_coords[1] - min_coords[1]) / ny;
+    dx[1] = ((double)max_coords[1] - min_coords[1]) / ny;
 
     allocate();
 }
 
 void Mesh::allocate() {
-    const int nx = n[0];
-    const int ny = n[1];
+    allocated = true;
 
-    u1.clear();
-    u1.resize((nx + 2) * (ny + 2));
+    int nx = n[0];
+    int ny = n[1];
 
-    u0.clear();
-    u0.resize((nx + 2) * (ny + 2));
+    /* Allocate arrays */
+    u1 = new double[(nx + 2) * (ny + 2)];
+    u0 = new double[(nx + 2) * (ny + 2)];
 
-    cellx.clear();
-    cellx.resize(nx + 2);
+    /* Allocate and initialise coordinate arrays */
+    cellx = new double[nx + 2];
+    celly = new double[ny + 2];
 
-    celly.clear();
-    celly.resize(ny + 2);
+    double xmin = min_coords[0];
+    double ymin = min_coords[1];
 
-    const double xmin = min_coords[0];
-    const double ymin = min_coords[1];
-
-#pragma omp parallel default(none) shared(cellx, celly, dx, xmin, ymin)
-    {
-#pragma omp for schedule(static) nowait
-        for (int i = 0; i < static_cast<int>(cellx.size()); ++i) {
-            cellx[i] = xmin + dx[0] * (i - 1);
-        }
-
-#pragma omp for schedule(static) nowait
-        for (int i = 0; i < static_cast<int>(celly.size()); ++i) {
-            celly[i] = ymin + dx[1] * (i - 1);
-        }
+    for (int i = 0; i < nx + 2; i++) {
+        cellx[i] = xmin + dx[0] * (i - 1);
     }
 
-    allocated = true;
+    for (int i = 0; i < ny + 2; i++) {
+        celly[i] = ymin + dx[1] * (i - 1);
+    }
 }
 
-std::vector<double>& Mesh::getU0() {
+double *Mesh::getU0() {
     return u0;
 }
 
-std::vector<double>& Mesh::getU1() {
+double *Mesh::getU1() {
     return u1;
 }
 
-const std::array<double, NDIM>& Mesh::getDx() const {
+double *Mesh::getDx() {
     return dx;
 }
 
-const std::array<int, NDIM>& Mesh::getMin() const {
+int *Mesh::getMin() {
     return min;
 }
 
-const std::array<int, NDIM>& Mesh::getMax() const {
+int *Mesh::getMax() {
     return max;
 }
 
@@ -87,45 +93,43 @@ int Mesh::getDim() {
     return NDIM;
 }
 
-const std::array<int, NDIM>& Mesh::getNx() const {
+int *Mesh::getNx() {
     return n;
 }
 
-const std::array<int, 4>& Mesh::getNeighbours() const {
+int *Mesh::getNeighbours() {
     return neighbours;
 }
 
-const std::vector<double>& Mesh::getCellX() const {
+double *Mesh::getCellX() {
     return cellx;
 }
 
-const std::vector<double>& Mesh::getCellY() const {
+double *Mesh::getCellY() {
     return celly;
 }
 
-double Mesh::getTotalTemperature() const {
-    if (!allocated) {
-        return 0.0;
-    }
+double Mesh::getTotalTemperature() {
+    if (allocated) {
+        double temperature = 0.0;
+        int x_min = min[0];
+        int x_max = max[0];
+        int y_min = min[1];
+        int y_max = max[1];
 
-    double temperature = 0.0;
-    const int x_min = min[0];
-    const int x_max = max[0];
-    const int y_min = min[1];
-    const int y_max = max[1];
+        int nx = n[0] + 2;
 
-    const int nx = n[0] + 2;
-
-#pragma omp parallel default(none) shared(temperature, u0, x_min, x_max, y_min, y_max, nx)
-    {
-#pragma omp for collapse(2) schedule(static) reduction(+ : temperature) nowait
         for (int k = y_min; k <= y_max; k++) {
             for (int j = x_min; j <= x_max; j++) {
-                const int n1 = poly2(j, k, x_min - 1, y_min - 1, nx);
+
+                int n1 = POLY2(j, k, x_min - 1, y_min - 1, nx);
+
                 temperature += u0[n1];
             }
         }
-    }
 
-    return temperature;
+        return temperature;
+    } else {
+        return 0.0;
+    }
 }

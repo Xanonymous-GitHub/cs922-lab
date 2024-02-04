@@ -1,36 +1,23 @@
-#pragma once
+#ifndef EXPLICIT_SCHEME_H_
+#define EXPLICIT_SCHEME_H_
 
-#include "Mesh.hpp"
+#include "InputFile.hpp"
 #include "Scheme.hpp"
 
-// ReSharper disable once CppUnusedIncludeDirective
-#include <memory>
+class ExplicitScheme : public Scheme {
+private:
+    Mesh *mesh;
 
-class ExplicitScheme final : public Scheme {
-    const std::shared_ptr<Mesh> mesh{};
-
-    void updateBoundaries() const;
-
-    void reset() const;
-
-    void diffuse(const double& dt) const;
-
-    void reflectBoundaries(const int& boundary_id) const;
+    void updateBoundaries();
+    void reset();
+    void diffuse(double dt);
+    void reflectBoundaries(int boundary_id);
 
 public:
-    ExplicitScheme() = delete;
+    ExplicitScheme(const InputFile *input, Mesh *m);
 
-    ExplicitScheme(const ExplicitScheme& other) = delete;
+    void doAdvance(const double dt);
 
-    ExplicitScheme(ExplicitScheme&& other) = delete;
-
-    ExplicitScheme& operator=(const ExplicitScheme& other) const = delete;
-
-    explicit ExplicitScheme(const std::shared_ptr<Mesh>& m);
-
-    ~ExplicitScheme() override = default;
-
-    void doAdvance(const double& dt) const override;
-
-    void init() const override;
+    void init();
 };
+#endif

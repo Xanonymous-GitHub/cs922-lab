@@ -1,21 +1,29 @@
-#pragma once
+#ifndef DIFFUSION_MESH_H_
+#define DIFFUSION_MESH_H_
 
 #include "InputFile.hpp"
 
-#include <array>
-#include <vector>
+class Mesh {
+private:
+    const InputFile *input;
 
-#define NDIM 2
+    double *u1;
+    double *u0;
+    double *cellx;
+    double *celly;
 
-class Mesh final {
-    std::vector<double> u1{}, u0{};
-    std::vector<double> cellx{}, celly{};
+    double *min_coords;
+    double *max_coords;
 
-    std::array<double, NDIM> min_coords{}, max_coords{};
-    std::array<int, NDIM> n{}, min{}, max{};
-    std::array<double, NDIM> dx{};
+    int NDIM;
 
-    /**
+    int *n;
+    int *min;
+    int *max;
+
+    double *dx;
+
+    /*
      * A mesh has four neighbours, and they are
      * accessed in the following order:
      * - top
@@ -23,66 +31,28 @@ class Mesh final {
      * - bottom
      * - left
      */
-    std::array<int, 4> neighbours{};
-
-    bool allocated = false;
+    int *neighbours;
 
     void allocate();
+    bool allocated;
 
 public:
-    Mesh() = delete;
+    Mesh(const InputFile *input);
 
-    Mesh(const Mesh& other) = default;
+    double *getU0();
+    double *getU1();
 
-    Mesh(Mesh&& other) = delete;
+    double *getDx();
+    int *getNx();
+    int *getMin();
+    int *getMax();
+    int getDim();
 
-    Mesh& operator=(const Mesh& other) const = delete;
+    double *getCellX();
+    double *getCellY();
 
-    explicit Mesh(const InputFile& inputFile);
+    int *getNeighbours();
 
-    ~Mesh() = default;
-
-    [[nodiscard]]
-    std::vector<double>& getU0();
-
-    [[nodiscard]]
-    std::vector<double>& getU1();
-
-    [[nodiscard]]
-    const std::array<double, NDIM>& getDx() const;
-
-    [[nodiscard]]
-    const std::array<int, NDIM>& getNx() const;
-
-    [[nodiscard]]
-    const std::array<int, NDIM>& getMin() const;
-
-    [[nodiscard]]
-    const std::array<int, NDIM>& getMax() const;
-
-    [[nodiscard]]
-    static int getDim();
-
-    [[nodiscard]]
-    const std::vector<double>& getCellX() const;
-
-    [[nodiscard]]
-    const std::vector<double>& getCellY() const;
-
-    [[nodiscard]]
-    const std::array<int, 4>& getNeighbours() const;
-
-    [[nodiscard]]
-    double getTotalTemperature() const;
-
-    [[nodiscard]]
-    static constexpr int poly2(
-        const int& i,
-        const int& j,
-        const int& imin,
-        const int& jmin,
-        const int& ni
-    ) {
-        return i - imin + (j - jmin) * ni;
-    }
+    double getTotalTemperature();
 };
+#endif

@@ -1,161 +1,134 @@
-// TODO: remove the following rule disable and fix the issue
-// ReSharper disable CppDFAUnusedValue CppDFAUnreadVariable CppDFALoopConditionNotUpdated
 #include "ExplicitScheme.hpp"
 
 #include <iostream>
 
-ExplicitScheme::ExplicitScheme(const std::shared_ptr<Mesh>& m) : mesh(m) {
+#define POLY2(i, j, imin, jmin, ni) (((i) - (imin)) + (((j) - (jmin)) * (ni)))
+
+ExplicitScheme::ExplicitScheme(const InputFile *input, Mesh *m) : mesh(m) {
+    int nx = mesh->getNx()[0];
+    int ny = mesh->getNx()[1];
 }
 
-void ExplicitScheme::doAdvance(const double& dt) const {
+void ExplicitScheme::doAdvance(const double dt) {
     diffuse(dt);
+
     reset();
+
     updateBoundaries();
 }
 
-void ExplicitScheme::updateBoundaries() const {
-#pragma omp parallel default(none) shared(mesh)
-    {
-#pragma omp for schedule(static) nowait
-        for (int i = 0; i < 4; i++) {
-            reflectBoundaries(i);
-        }
+void ExplicitScheme::updateBoundaries() {
+    for (int i = 0; i < 4; i++) {
+        reflectBoundaries(i);
     }
 }
 
-void ExplicitScheme::init() const {
+void ExplicitScheme::init() {
     updateBoundaries();
 }
 
-void ExplicitScheme::reset() const {
-    auto& u0 = mesh->getU0();
-    const auto& u1 = mesh->getU1();
-    const int x_min = mesh->getMin()[0];
-    const int x_max = mesh->getMax()[0];
-    const int y_min = mesh->getMin()[1];
-    const int y_max = mesh->getMax()[1];
+void ExplicitScheme::reset() {
+    double *u0 = mesh->getU0();
+    double *u1 = mesh->getU1();
+    int x_min = mesh->getMin()[0];
+    int x_max = mesh->getMax()[0];
+    int y_min = mesh->getMin()[1];
+    int y_max = mesh->getMax()[1];
 
-    const int nx = mesh->getNx()[0] + 2;
+    int nx = mesh->getNx()[0] + 2;
 
-#pragma omp parallel default(none) shared(u0, u1, x_min, x_max, y_min, y_max, nx)
-    {
-#pragma omp for collapse(2) schedule(static) nowait
-        for (int k = y_min - 1; k <= y_max + 1; k++) {
-            for (int j = x_min - 1; j <= x_max + 1; j++) {
-                const int i = Mesh::poly2(j, k, x_min - 1, y_min - 1, nx);
-                u0[i] = u1[i];
-            }
+    for (int k = y_min - 1; k <= y_max + 1; k++) {
+        for (int j = x_min - 1; j <= x_max + 1; j++) {
+            int i = POLY2(j, k, x_min - 1, y_min - 1, nx);
+            u0[i] = u1[i];
         }
     }
 }
 
-void ExplicitScheme::diffuse(const double& dt) const {
-    const auto& u0 = mesh->getU0();
-    auto& u1 = mesh->getU1();
-    const int x_min = mesh->getMin()[0];
-    const int x_max = mesh->getMax()[0];
-    const int y_min = mesh->getMin()[1];
-    const int y_max = mesh->getMax()[1];
-    const double dx = mesh->getDx()[0];
-    const double dy = mesh->getDx()[1];
+void ExplicitScheme::diffuse(double dt) {
+    double *u0 = mesh->getU0();
+    double *u1 = mesh->getU1();
+    int x_min = mesh->getMin()[0];
+    int x_max = mesh->getMax()[0];
+    int y_min = mesh->getMin()[1];
+    int y_max = mesh->getMax()[1];
+    double dx = mesh->getDx()[0];
+    double dy = mesh->getDx()[1];
 
-    const int nx = mesh->getNx()[0] + 2;
+    int nx = mesh->getNx()[0] + 2;
 
-    const double rx = dt / (dx * dx);
-    const double ry = dt / (dy * dy);
+    double rx = dt / (dx * dx);
+    double ry = dt / (dy * dy);
 
-#pragma omp parallel default(none) shared(u0, u1, x_min, x_max, y_min, y_max, nx, rx, ry)
-    {
-#pragma omp for collapse(2) schedule(static) nowait
-        for (int k = y_min; k <= y_max; k++) {
-            for (int j = x_min; j <= x_max; j++) {
-                const int n1 = Mesh::poly2(j, k, x_min - 1, y_min - 1, nx);
-                const int n2 = Mesh::poly2(j - 1, k, x_min - 1, y_min - 1, nx);
-                const int n3 = Mesh::poly2(j + 1, k, x_min - 1, y_min - 1, nx);
-                const int n4 = Mesh::poly2(j, k - 1, x_min - 1, y_min - 1, nx);
-                const int n5 = Mesh::poly2(j, k + 1, x_min - 1, y_min - 1, nx);
+    for (int k = y_min; k <= y_max; k++) {
+        for (int j = x_min; j <= x_max; j++) {
 
-                u1[n1] = (1.0 - 2.0 * rx - 2.0 * ry) * u0[n1] +
-                         rx * u0[n2] +
-                         rx * u0[n3] +
-                         ry * u0[n4] +
-                         ry * u0[n5];
-            }
+            int n1 = POLY2(j, k, x_min - 1, y_min - 1, nx);
+            int n2 = POLY2(j - 1, k, x_min - 1, y_min - 1, nx);
+            int n3 = POLY2(j + 1, k, x_min - 1, y_min - 1, nx);
+            int n4 = POLY2(j, k - 1, x_min - 1, y_min - 1, nx);
+            int n5 = POLY2(j, k + 1, x_min - 1, y_min - 1, nx);
+
+            u1[n1] = (1.0 - 2.0 * rx - 2.0 * ry) * u0[n1] + rx * u0[n2] + rx * u0[n3] + ry * u0[n4] + ry * u0[n5];
         }
     }
 }
 
-void ExplicitScheme::reflectBoundaries(const int& boundary_id) const {
-    auto& u0 = mesh->getU0();
-    const int x_min = mesh->getMin()[0];
-    const int x_max = mesh->getMax()[0];
-    const int y_min = mesh->getMin()[1];
-    const int y_max = mesh->getMax()[1];
+void ExplicitScheme::reflectBoundaries(int boundary_id) {
+    double *u0 = mesh->getU0();
+    int x_min = mesh->getMin()[0];
+    int x_max = mesh->getMax()[0];
+    int y_min = mesh->getMin()[1];
+    int y_max = mesh->getMax()[1];
 
-    const int nx = mesh->getNx()[0] + 2;
+    int nx = mesh->getNx()[0] + 2;
 
     switch (boundary_id) {
-        case 0: {
-            /* top */
-#pragma omp parallel default(none) shared(u0, x_min, x_max, y_min, y_max, nx)
-            {
-#pragma omp for schedule(static) nowait
-                for (int j = x_min; j <= x_max; j++) {
-                    const int n1 = Mesh::poly2(j, y_max, x_min - 1, y_min - 1, nx);
-                    const int n2 = Mesh::poly2(j, y_max + 1, x_min - 1, y_min - 1, nx);
+    case 0:
+        /* top */
+        {
+            for (int j = x_min; j <= x_max; j++) {
+                int n1 = POLY2(j, y_max, x_min - 1, y_min - 1, nx);
+                int n2 = POLY2(j, y_max + 1, x_min - 1, y_min - 1, nx);
 
-                    u0[n2] = u0[n1];
-                }
+                u0[n2] = u0[n1];
             }
-            break;
         }
+        break;
+    case 1:
+        /* right */
+        {
+            for (int k = y_min; k <= y_max; k++) {
+                int n1 = POLY2(x_max, k, x_min - 1, y_min - 1, nx);
+                int n2 = POLY2(x_max + 1, k, x_min - 1, y_min - 1, nx);
 
-        case 1: {
-            /* right */
-#pragma omp parallel default(none) shared(u0, x_min, x_max, y_min, y_max, nx)
-            {
-#pragma omp for schedule(static) nowait
-                for (int k = y_min; k <= y_max; k++) {
-                    const int n1 = Mesh::poly2(x_max, k, x_min - 1, y_min - 1, nx);
-                    const int n2 = Mesh::poly2(x_max + 1, k, x_min - 1, y_min - 1, nx);
-
-                    u0[n2] = u0[n1];
-                }
+                u0[n2] = u0[n1];
             }
-            break;
         }
+        break;
+    case 2:
+        /* bottom */
+        {
+            for (int j = x_min; j <= x_max; j++) {
+                int n1 = POLY2(j, y_min, x_min - 1, y_min - 1, nx);
+                int n2 = POLY2(j, y_min - 1, x_min - 1, y_min - 1, nx);
 
-        case 2: {
-            /* bottom */
-#pragma omp parallel default(none) shared(u0, x_min, x_max, y_min, y_max, nx)
-            {
-#pragma omp for schedule(static) nowait
-                for (int j = x_min; j <= x_max; j++) {
-                    const int n1 = Mesh::poly2(j, y_min, x_min - 1, y_min - 1, nx);
-                    const int n2 = Mesh::poly2(j, y_min - 1, x_min - 1, y_min - 1, nx);
-
-                    u0[n2] = u0[n1];
-                }
+                u0[n2] = u0[n1];
             }
-            break;
         }
+        break;
+    case 3:
+        /* left */
+        {
+            for (int k = y_min; k <= y_max; k++) {
+                int n1 = POLY2(x_min, k, x_min - 1, y_min - 1, nx);
+                int n2 = POLY2(x_min - 1, k, x_min - 1, y_min - 1, nx);
 
-        case 3: {
-            /* left */
-#pragma omp parallel default(none) shared(u0, x_min, x_max, y_min, y_max, nx)
-            {
-#pragma omp for schedule(static) nowait
-                for (int k = y_min; k <= y_max; k++) {
-                    const int n1 = Mesh::poly2(x_min, k, x_min - 1, y_min - 1, nx);
-                    const int n2 = Mesh::poly2(x_min - 1, k, x_min - 1, y_min - 1, nx);
-
-                    u0[n2] = u0[n1];
-                }
+                u0[n2] = u0[n1];
             }
-            break;
         }
-
-        default:
-            std::cerr << "Error in reflectBoundaries(): unknown boundary id (" << boundary_id << ")" << '\n';
+        break;
+    default:
+        std::cerr << "Error in reflectBoundaries(): unknown boundary id (" << boundary_id << ")" << std::endl;
     }
 }

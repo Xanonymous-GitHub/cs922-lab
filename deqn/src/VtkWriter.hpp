@@ -1,23 +1,24 @@
-#pragma once
+#ifndef VTKWRITER_H_
+#define VTKWRITER_H_
 
 #include "Mesh.hpp"
-
-// ReSharper disable once CppUnusedIncludeDirective
-#include <memory>
 #include <string>
 
-class VtkWriter final {
-    const std::string dump_basename;
+class VtkWriter {
+private:
+    std::string dump_basename;
 
-    const std::shared_ptr<Mesh> mesh;
+    std::string vtk_header;
 
-    inline static const std::string vtk_header = "# vtk DataFile Version 3.0\nvtk output\nASCII";
+    Mesh *mesh;
+
     inline static const std::string _path_prefix = "out/";
 
+    void writeVtk(int step, double time);
+
 public:
-    VtkWriter(std::string basename, const std::shared_ptr<Mesh>& mesh);
+    VtkWriter(std::string basename, Mesh *mesh);
 
-    void writeVtk(const int& step, const double& time) const;
-
-    void writeVisited(const int& final_step) const;
+    void write(int step, double time);
 };
+#endif
