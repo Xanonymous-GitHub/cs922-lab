@@ -20,14 +20,15 @@ BINARY := $(BUILDDIR)/$(PRODUCT)
 # g++ flags:
 CXX := mpic++
 CXXFLAGS_DEBUG := -g -DDEBUG
-CXXFLAGS_OPT := -O3
+CXXFLAGS_OPT := -O3 -finline-functions -m64 -funroll-loops -fvectorize -ftree-vectorize
 CXXFLAGS_OPENMP := -fopenmp
 CXXFLAGS_STANDARD := -std=c++2a
+CXXFLAGS_OTHER := -Wall -Wextra -Wpedantic
 
 LD := $(CXX)
 
 # select optimized or debug
-CXXFLAGS := $(CXXFLAGS_OPT) $(CPPFLAGS)
+CXXFLAGS := $(CXXFLAGS_OPT) $(CXXFLAGS_OTHER) $(CPPFLAGS)
 # CXXFLAGS := $(CXXFLAGS_OPT) $(CXXFLAGS_DEBUG) $(CPPFLAGS)
 
 # add openmp flags (comment out for serial build)
