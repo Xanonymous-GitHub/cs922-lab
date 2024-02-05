@@ -35,4 +35,5 @@ export OMP_PROC_BIND=spread
 export OMP_PLACES=threads
 
 # Execute the command
-"$BUILD_EXEC" "$TEST_INPUT"
+# The number of MPI processes is set to 4, which is the same as the number of nodes in the SBATCH file.
+mpirun -n 4 "$BUILD_EXEC" "$TEST_INPUT"
