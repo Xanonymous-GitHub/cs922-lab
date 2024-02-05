@@ -6,8 +6,8 @@ set -e
 function run_job() {
     # Default job name prefix
     local default_job_prefix="¡"
-    local executable="./build/deqn"
-    local executable_original="./build/deqn.original"
+    local executable="./run_deqn_square.bash"
+    local executable_original="./run_deqn_original_square.bash"
 
     job_name="${default_job_prefix}$(date -u +%s | sha256sum | cut -c1-8)"
 
