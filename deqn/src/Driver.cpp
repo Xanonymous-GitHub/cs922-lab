@@ -101,6 +101,6 @@ void Driver::run() const {
             << '\n'
             << "+++++++++++++++++++++" << '\n'
             << "   Run completete.   " << '\n'
-            << "   Total " << step - 1 << " steps" << '\n'
+            << "   Total " << step << " steps" << '\n'
             << "+++++++++++++++++++++" << '\n';
 }
