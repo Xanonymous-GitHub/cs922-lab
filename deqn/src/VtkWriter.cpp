@@ -20,9 +20,11 @@ VtkWriter::VtkWriter(std::string basename, Mesh *mesh) : dump_basename(basename)
     file << "!NBLOCKS "
          << 1 << std::endl;
 
+#ifdef DEBUG
     if (!std::filesystem::exists(_path_prefix) || !std::filesystem::is_directory(_path_prefix)) {
         std::filesystem::create_directory(_path_prefix);
     }
+#endif
 }
 
 void VtkWriter::write(int step, double time) {

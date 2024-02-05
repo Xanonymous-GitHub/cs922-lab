@@ -37,8 +37,8 @@ Driver::Driver(const InputFile *input, const std::string &pname)
     writer = new VtkWriter(pname, mesh);
 
     /* Initial mesh dump */
-    if (vis_frequency != -1)
-        writer->write(0, 0.0);
+    // if (vis_frequency != -1)
+    //     writer->write(0, 0.0);
 }
 
 Driver::~Driver() {
