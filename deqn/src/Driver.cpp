@@ -55,20 +55,20 @@ void Driver::run() {
     for (t_current = t_start; t_current < t_end; t_current += dt) {
         step = t_current / dt + 1;
 
-        std::cout << "+ step: " << step << ", dt:   " << dt << std::endl;
+        // std::cout << "+ step: " << step << ", dt:   " << dt << std::endl;
 
         diffusion->doCycle(dt);
 
-        if (step % vis_frequency == 0 && vis_frequency != -1)
-            writer->write(step, t_current);
-        if (step % summary_frequency == 0 && summary_frequency != -1) {
-            double temperature = mesh->getTotalTemperature();
-            std::cout << "+\tcurrent total temperature: " << temperature << std::endl;
-        }
+        // if (step % vis_frequency == 0 && vis_frequency != -1)
+        //     writer->write(step, t_current);
+        // if (step % summary_frequency == 0 && summary_frequency != -1) {
+        //     double temperature = mesh->getTotalTemperature();
+        //     std::cout << "+\tcurrent total temperature: " << temperature << std::endl;
+        // }
     }
 
-    if (step % vis_frequency != 0 && vis_frequency != -1)
-        writer->write(step, t_current);
+    // if (step % vis_frequency != 0 && vis_frequency != -1)
+    //     writer->write(step, t_current);
 
     std::cout << std::endl;
     std::cout << "+++++++++++++++++++++" << std::endl;
