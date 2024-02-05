@@ -9,6 +9,9 @@ Driver::Driver(const InputFile& input, const std::string& problem_name)
       _problem_name(problem_name) {
     std::cout << "+++++++++++++++++++++" << '\n';
     std::cout << "  Running deqn (Refactored by Xanonymous)  " << '\n';
+#ifdef DEBUG
+    std::cout << "   << DEBUG >>   " << '\n';
+#endif
 
 #ifdef DEBUG
     std::cout << "- input file: " << problem_name << '\n';
@@ -66,7 +69,7 @@ void Driver::run() const {
 #endif
         }
 
-        writer.writeVisited(step - 1);
+        writer.writeVisited(--step);
     } else {
         for (step = 1; step <= total_runtime; ++step) {
             t_current += dt;
@@ -90,12 +93,14 @@ void Driver::run() const {
             writer.writeVtk(step, t_current);
             writer.writeVisited(step);
         } else {
-            writer.writeVisited(step - 1);
+            writer.writeVisited(--step);
         }
     }
 
-    std::cout << '\n';
-    std::cout << "+++++++++++++++++++++" << '\n';
-    std::cout << "   Run completete.   " << '\n';
-    std::cout << "+++++++++++++++++++++" << '\n';
+    std::cout
+            << '\n'
+            << "+++++++++++++++++++++" << '\n'
+            << "   Run completete.   " << '\n'
+            << "   Total " << step - 1 << " steps" << '\n'
+            << "+++++++++++++++++++++" << '\n';
 }
