@@ -1,6 +1,6 @@
 BUILDDIR := build
 OUTDIR := out
-PRODUCT := deqn
+PRODUCT := deqn.original
 
 SRCDIR := src
 
