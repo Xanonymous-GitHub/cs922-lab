@@ -60,7 +60,7 @@ void Driver::run() const {
             t_current += dt;
 
             diffusion.doCycle(dt);
-            writer.writeVtk(step, t_current);
+            // writer.writeVtk(step, t_current);
 
 #ifdef DEBUG
             std::cout << "+ step: " << step << ", dt:   " << dt << '\n';
@@ -89,12 +89,12 @@ void Driver::run() const {
 #endif
         }
 
-        if (step % vis_frequency != 0 && vis_frequency != -1) {
-            writer.writeVtk(step, t_current);
-            writer.writeVisited(step);
-        } else {
-            writer.writeVisited(--step);
-        }
+        // if (step % vis_frequency != 0 && vis_frequency != -1) {
+        //     writer.writeVtk(step, t_current);
+        //     writer.writeVisited(step);
+        // } else {
+        //     writer.writeVisited(--step);
+        // }
     }
 
     std::cout
