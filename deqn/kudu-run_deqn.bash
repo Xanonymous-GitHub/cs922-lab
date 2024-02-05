@@ -43,7 +43,7 @@ function run_job() {
         echo "#SBATCH --job-name=$job_name"
         echo "#SBATCH --account=cs402users"
         echo "#SBATCH --partition=cs402-openmp"
-        echo "#SBATCH --nodes=2"
+        echo "#SBATCH --nodes=1"
         echo "#SBATCH --ntasks=2"
         echo "#SBATCH --ntasks-per-node=1"
         echo "#SBATCH --cpus-per-task=40"
