@@ -9,13 +9,30 @@
 class ExplicitScheme final : public Scheme {
     const std::shared_ptr<Mesh> mesh{};
 
-    void updateBoundaries() const;
+    void updateBoundaries(
+        const int& x_min,
+        const int& x_max,
+        const int& y_min,
+        const int& y_max,
+        const int& nx
+    ) const;
 
-    void reset() const;
+    void reset(
+        const int& x_min,
+        const int& x_max,
+        const int& y_min,
+        const int& y_max,
+        const int& nx
+    ) const;
 
-    void diffuse(const double& dt) const;
-
-    void reflectBoundaries(const int& boundary_id) const;
+    void diffuse(
+        const double& dt,
+        const int& x_min,
+        const int& x_max,
+        const int& y_min,
+        const int& y_max,
+        const int& nx
+    ) const;
 
 public:
     ExplicitScheme() = delete;

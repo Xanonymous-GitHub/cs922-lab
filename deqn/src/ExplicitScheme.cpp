@@ -7,37 +7,84 @@
 ExplicitScheme::ExplicitScheme(const std::shared_ptr<Mesh>& m) : mesh(m) {
 }
 
-void ExplicitScheme::doAdvance(const double& dt) const {
-    diffuse(dt);
-    reset();
-    updateBoundaries();
-}
-
-void ExplicitScheme::updateBoundaries() const {
-#pragma omp parallel default(none) shared(mesh)
-    {
-#pragma omp for schedule(static) nowait
-        for (int i = 0; i < 4; i++) {
-            reflectBoundaries(i);
-        }
-    }
-}
-
 void ExplicitScheme::init() const {
-    updateBoundaries();
-}
-
-void ExplicitScheme::reset() const {
-    auto& u0 = mesh->getU0();
-    const auto& u1 = mesh->getU1();
     const int x_min = mesh->getMin()[0];
     const int x_max = mesh->getMax()[0];
     const int y_min = mesh->getMin()[1];
     const int y_max = mesh->getMax()[1];
-
     const int nx = mesh->getNx()[0] + 2;
 
-#pragma omp parallel default(none) shared(u0, u1, x_min, x_max, y_min, y_max, nx)
+    updateBoundaries(x_min, x_max, y_min, y_max, nx);
+}
+
+void ExplicitScheme::doAdvance(const double& dt) const {
+    const int x_min = mesh->getMin()[0];
+    const int x_max = mesh->getMax()[0];
+    const int y_min = mesh->getMin()[1];
+    const int y_max = mesh->getMax()[1];
+    const int nx = mesh->getNx()[0] + 2;
+
+    diffuse(dt, x_min, x_max, y_min, y_max, nx);
+    reset(x_min, x_max, y_min, y_max, nx);
+    updateBoundaries(x_min, x_max, y_min, y_max, nx);
+}
+
+void ExplicitScheme::updateBoundaries(
+    const int& x_min,
+    const int& x_max,
+    const int& y_min,
+    const int& y_max,
+    const int& nx
+) const {
+    auto& u0 = mesh->getU0();
+
+#pragma omp parallel default(none) shared(u0) firstprivate(x_min, x_max, y_min, y_max, nx)
+    {
+#pragma omp for schedule(static) nowait // Edge -> top
+        for (int i = x_min; i <= x_max; i++) {
+            const int n1 = Mesh::poly2(i, y_max, x_min - 1, y_min - 1, nx);
+            const int n2 = Mesh::poly2(i, y_max + 1, x_min - 1, y_min - 1, nx);
+
+            u0[n2] = u0[n1];
+        }
+
+#pragma omp for schedule(static) nowait // Edge -> right
+        for (int j = y_min; j <= y_max; j++) {
+            const int n1 = Mesh::poly2(x_max, j, x_min - 1, y_min - 1, nx);
+            const int n2 = Mesh::poly2(x_max + 1, j, x_min - 1, y_min - 1, nx);
+
+            u0[n2] = u0[n1];
+        }
+
+#pragma omp for schedule(static) nowait // Edge -> bottom
+        for (int i = x_min; i <= x_max; i++) {
+            const int n1 = Mesh::poly2(i, y_min, x_min - 1, y_min - 1, nx);
+            const int n2 = Mesh::poly2(i, y_min - 1, x_min - 1, y_min - 1, nx);
+
+            u0[n2] = u0[n1];
+        }
+
+#pragma omp for schedule(static) nowait // Edge -> left
+        for (int j = y_min; j <= y_max; j++) {
+            const int n1 = Mesh::poly2(x_min, j, x_min - 1, y_min - 1, nx);
+            const int n2 = Mesh::poly2(x_min - 1, j, x_min - 1, y_min - 1, nx);
+
+            u0[n2] = u0[n1];
+        }
+    }
+}
+
+void ExplicitScheme::reset(
+    const int& x_min,
+    const int& x_max,
+    const int& y_min,
+    const int& y_max,
+    const int& nx
+) const {
+    auto& u0 = mesh->getU0();
+    const auto& u1 = mesh->getU1();
+
+#pragma omp parallel default(none) shared(u0, u1) firstprivate(x_min, x_max, y_min, y_max, nx)
     {
 #pragma omp for collapse(2) schedule(static) nowait
         for (int k = y_min - 1; k <= y_max + 1; k++) {
@@ -49,22 +96,24 @@ void ExplicitScheme::reset() const {
     }
 }
 
-void ExplicitScheme::diffuse(const double& dt) const {
+void ExplicitScheme::diffuse(
+    const double& dt,
+    const int& x_min,
+    const int& x_max,
+    const int& y_min,
+    const int& y_max,
+    const int& nx
+) const {
     const auto& u0 = mesh->getU0();
     auto& u1 = mesh->getU1();
-    const int x_min = mesh->getMin()[0];
-    const int x_max = mesh->getMax()[0];
-    const int y_min = mesh->getMin()[1];
-    const int y_max = mesh->getMax()[1];
+
     const double dx = mesh->getDx()[0];
     const double dy = mesh->getDx()[1];
-
-    const int nx = mesh->getNx()[0] + 2;
 
     const double rx = dt / (dx * dx);
     const double ry = dt / (dy * dy);
 
-#pragma omp parallel default(none) shared(u0, u1, x_min, x_max, y_min, y_max, nx, rx, ry)
+#pragma omp parallel default(none) shared(u0, u1) firstprivate(x_min, x_max, y_min, y_max, nx, rx, ry)
     {
 #pragma omp for collapse(2) schedule(static) nowait
         for (int k = y_min; k <= y_max; k++) {
@@ -82,80 +131,5 @@ void ExplicitScheme::diffuse(const double& dt) const {
                          ry * u0[n5];
             }
         }
-    }
-}
-
-void ExplicitScheme::reflectBoundaries(const int& boundary_id) const {
-    auto& u0 = mesh->getU0();
-    const int x_min = mesh->getMin()[0];
-    const int x_max = mesh->getMax()[0];
-    const int y_min = mesh->getMin()[1];
-    const int y_max = mesh->getMax()[1];
-
-    const int nx = mesh->getNx()[0] + 2;
-
-    switch (boundary_id) {
-        case 0: {
-            /* top */
-#pragma omp parallel default(none) shared(u0, x_min, x_max, y_min, y_max, nx)
-            {
-#pragma omp for schedule(static) nowait
-                for (int j = x_min; j <= x_max; j++) {
-                    const int n1 = Mesh::poly2(j, y_max, x_min - 1, y_min - 1, nx);
-                    const int n2 = Mesh::poly2(j, y_max + 1, x_min - 1, y_min - 1, nx);
-
-                    u0[n2] = u0[n1];
-                }
-            }
-            break;
-        }
-
-        case 1: {
-            /* right */
-#pragma omp parallel default(none) shared(u0, x_min, x_max, y_min, y_max, nx)
-            {
-#pragma omp for schedule(static) nowait
-                for (int k = y_min; k <= y_max; k++) {
-                    const int n1 = Mesh::poly2(x_max, k, x_min - 1, y_min - 1, nx);
-                    const int n2 = Mesh::poly2(x_max + 1, k, x_min - 1, y_min - 1, nx);
-
-                    u0[n2] = u0[n1];
-                }
-            }
-            break;
-        }
-
-        case 2: {
-            /* bottom */
-#pragma omp parallel default(none) shared(u0, x_min, x_max, y_min, y_max, nx)
-            {
-#pragma omp for schedule(static) nowait
-                for (int j = x_min; j <= x_max; j++) {
-                    const int n1 = Mesh::poly2(j, y_min, x_min - 1, y_min - 1, nx);
-                    const int n2 = Mesh::poly2(j, y_min - 1, x_min - 1, y_min - 1, nx);
-
-                    u0[n2] = u0[n1];
-                }
-            }
-            break;
-        }
-
-        case 3: {
-            /* left */
-#pragma omp parallel default(none) shared(u0, x_min, x_max, y_min, y_max, nx)
-            {
-#pragma omp for schedule(static) nowait
-                for (int k = y_min; k <= y_max; k++) {
-                    const int n1 = Mesh::poly2(x_min, k, x_min - 1, y_min - 1, nx);
-                    const int n2 = Mesh::poly2(x_min - 1, k, x_min - 1, y_min - 1, nx);
-
-                    u0[n2] = u0[n1];
-                }
-            }
-            break;
-        }
-
-        default:
-            std::cerr << "Error in reflectBoundaries(): unknown boundary id (" << boundary_id << ")" << '\n';
     }
 }
