@@ -9,9 +9,11 @@
 VtkWriter::VtkWriter(std::string basename, const std::shared_ptr<Mesh>& mesh)
     : dump_basename{std::move(basename)},
       mesh{mesh} {
+#ifdef DEBUG
     if (!std::filesystem::exists(_path_prefix) || !std::filesystem::is_directory(_path_prefix)) {
         std::filesystem::create_directory(_path_prefix);
     }
+#endif
 }
 
 void VtkWriter::writeVtk(const int& step, const double& time) const {

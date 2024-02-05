@@ -33,20 +33,23 @@ Driver::Driver(const InputFile& input, const std::string& problem_name)
     std::cout << "- end_time: " << t_end << '\n';
     std::cout << "- vis_frequency: " << vis_frequency << '\n';
     std::cout << "- summary_frequency: " << summary_frequency << '\n';
-#endif
-
-    std::cout << "+++++++++++++++++++++" << '\n';
-    std::cout << '\n';
 
     /* Initial mesh dump */
     if (vis_frequency != -1) {
         writer.writeVtk(0, 0.0);
     }
+#endif
+
+    std::cout << "+++++++++++++++++++++" << '\n';
+    std::cout << '\n';
 }
 
 void Driver::run() const {
     int step;
+
+#ifdef DEBUG
     double t_current = t_start;
+#endif
 
     std::cout
             << "+++++++++++++++++++++" << '\n'
@@ -55,52 +58,38 @@ void Driver::run() const {
 
     const int& total_runtime = static_cast<int>((t_end - t_start) / dt);
 
-    if (vis_frequency == 1 && summary_frequency == 1) {
-        for (step = 1; step <= total_runtime; ++step) {
-            t_current += dt;
-
-            diffusion.doCycle(dt);
-            // writer.writeVtk(step, t_current);
-
+    for (step = 1; step <= total_runtime; ++step) {
+        diffusion.doCycle(dt);
 #ifdef DEBUG
-            std::cout << "+ step: " << step << ", dt:   " << dt << '\n';
-            const double temperature = mesh->getTotalTemperature();
-            std::cout << "+\tcurrent total temperature: " << temperature << '\n';
-#endif
+        t_current += dt;
+        if (step % vis_frequency == 0 && vis_frequency != -1) {
+            writer.writeVtk(step, t_current);
         }
 
-        writer.writeVisited(--step);
-    } else {
-        for (step = 1; step <= total_runtime; ++step) {
-            t_current += dt;
+        std::cout << "+ step: " << step << ", dt:   " << dt << '\n';
 
-            diffusion.doCycle(dt);
-
-            if (step % vis_frequency == 0 && vis_frequency != -1) {
-                writer.writeVtk(step, t_current);
-            }
-
-#ifdef DEBUG
-            std::cout << "+ step: " << step << ", dt:   " << dt << '\n';
-            if (step % summary_frequency == 0 && summary_frequency != -1) {
-                const double temperature = mesh->getTotalTemperature();
-                std::cout << "+\tcurrent total temperature: " << temperature << '\n';
-            }
+        const double temperature = mesh->getTotalTemperature();
+        std::cout << "+\tcurrent total temperature: " << temperature << '\n';
 #endif
-        }
-
-        // if (step % vis_frequency != 0 && vis_frequency != -1) {
-        //     writer.writeVtk(step, t_current);
-        //     writer.writeVisited(step);
-        // } else {
-        //     writer.writeVisited(--step);
-        // }
     }
+
+#ifdef DEBUG
+    if (step % vis_frequency != 0 && vis_frequency != -1) {
+        writer.writeVtk(step, t_current);
+        writer.writeVisited(step);
+    } else {
+        writer.writeVisited(--step);
+    }
+#endif
 
     std::cout
             << '\n'
             << "+++++++++++++++++++++" << '\n'
             << "   Run completete.   " << '\n'
+#ifdef DEBUG
             << "   Total " << step << " steps" << '\n'
+#else
+            << "   Total " << step - 1 << " steps" << '\n'
+#endif
             << "+++++++++++++++++++++" << '\n';
 }
