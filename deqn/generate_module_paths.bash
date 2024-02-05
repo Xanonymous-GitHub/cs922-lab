@@ -57,4 +57,4 @@ get_module_paths() {
     done
 }
 
-get_module_paths "$1" g++ g++-13
+get_module_paths "$1" mpic++ g++ g++-13
