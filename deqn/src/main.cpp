@@ -11,6 +11,8 @@ int main(int argc, char *argv[]) {
         std::cerr << "Usage: deqn <filename>" << std::endl;
         exit(1);
     }
+    
+    const auto& start_time = omp_get_wtime();
 
     const char *filename = argv[1];
     InputFile input(filename);
@@ -35,9 +37,10 @@ int main(int argc, char *argv[]) {
 
     Driver driver(&input, problem_name);
 
-    const auto& start_time = omp_get_wtime();
+
     driver.run();
     const auto& end_time = omp_get_wtime();
+
     std::cout << "Elapsed time: " << end_time - start_time << " seconds" << '\n';
 
     return 0;
