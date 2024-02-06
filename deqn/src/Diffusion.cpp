@@ -3,6 +3,7 @@
 #include "Diffusion.hpp"
 #include "ExplicitScheme.hpp"
 
+#include <cmath>
 #include <iostream>
 
 Diffusion::Diffusion(const InputFile& input, const std::shared_ptr<Mesh>& m) : mesh{m} {
@@ -24,30 +25,25 @@ Diffusion::Diffusion(const InputFile& input, const std::shared_ptr<Mesh>& m) : m
 }
 
 void Diffusion::init() const {
+    if (subregion.empty()) {
+        return;
+    }
+
     auto& u0 = mesh->getU0();
 
-    const int x_max = mesh->getNx()[0];
-    const int y_max = mesh->getNx()[1];
+    const int nx = mesh->getNx()[0] + 2;
 
-    const auto& cellx = mesh->getCellX();
-    const auto& celly = mesh->getCellY();
+    const int x_min_pos = static_cast<int>(std::ceil(subregion[0]));
+    const int x_max_pos = static_cast<int>(std::floor(subregion[2]));
+    const int y_min_pos = static_cast<int>(std::ceil(subregion[1]));
+    const int y_max_pos = static_cast<int>(std::floor(subregion[3]));
 
-    const int nx = x_max + 2;
-
-#pragma omp parallel default(none) shared(u0, x_max, y_max, cellx, celly, subregion, nx)
+#pragma omp parallel default(none) shared(u0) firstprivate(nx, x_min_pos, x_max_pos, y_min_pos, y_max_pos)
     {
 #pragma omp for collapse(2) schedule(static) nowait
-        for (int j = 0; j < y_max + 2; j++) {
-            for (int i = 0; i < x_max + 2; i++) {
-                if (
-                    !subregion.empty() &&
-                    celly[j] > subregion[1] && celly[j] <= subregion[3] &&
-                    cellx[i] > subregion[0] && cellx[i] <= subregion[2]
-                ) {
-                    u0[i + j * nx] = 10.0;
-                } else {
-                    u0[i + j * nx] = 0.0;
-                }
+        for (int j = y_min_pos; j <= y_max_pos; ++j) {
+            for (int i = x_min_pos; i <= x_max_pos; ++i) {
+                u0[i + j * nx] = 10.0;
             }
         }
     }
