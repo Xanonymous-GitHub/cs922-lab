@@ -1,16 +1,9 @@
 BUILDDIR := build
 OUTDIR := out
-
 SRCDIR := src
 
 CXXINCLUDES := $(shell bash generate_module_paths.bash 'include' | sed 's/^/-I/')
 CXXLIBS := $(shell bash generate_module_paths.bash 'lib' | sed 's/^/-L/')
-
-HDRS := $(wildcard $(SRCDIR)/*.h)
-
-CSRCS := $(wildcard $(SRCDIR)/*.c)
-
-OBJS := $(CSRCS:$(SRCDIR)/%.c=$(BUILDDIR)/%.o)
 
 # g++ flags:
 CXX := mpicc
@@ -19,8 +12,6 @@ CXXFLAGS_OPT := -O3 -finline-functions -m64 -funroll-loops
 CXXFLAGS_OPENMP := -fopenmp
 CXXFLAGS_STANDARD := -std=c11
 CXXFLAGS_OTHER := -Wall -Wextra -Wpedantic
-
-LD := $(CXX)
 
 CXXFLAGS := $(CXXFLAGS_OPT) $(CXXFLAGS_OTHER) $(CPPFLAGS)
 
@@ -36,13 +27,13 @@ define maketargetdir
 endef
 
 define linking
-	@echo linking $@
+	@printf "\033[92m linking \033[0m\n" $@
 	$(maketargetdir)
-	$(LD) $(LDFLAGS) $(CXXLIBS) $(CXXFLAGS_STANDARD) -o $@ $^
+	$(CXX) $(LDFLAGS) $(CXXLIBS) $(CXXFLAGS_STANDARD) -o $@ $^
 endef
 
 define compiling
-	@echo compiling $<
+	@printf "\033[96m compiling \033[0m\n" $<
 	$(maketargetdir)
 	$(CXX) $(CXXFLAGS) $(CXXFLAGS_STANDARD) $(CXXINCLUDES) -c -o $@ $<
 endef
