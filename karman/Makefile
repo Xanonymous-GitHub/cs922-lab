@@ -1,3 +1,5 @@
+.PHONY: all
+
 BUILDDIR := build
 OUTDIR := out
 SRCDIR := src
@@ -6,11 +8,11 @@ CXXINCLUDES := $(shell bash generate_module_paths.bash 'include' | sed 's/^/-I/'
 CXXLIBS := $(shell bash generate_module_paths.bash 'lib' | sed 's/^/-L/')
 
 # g++ flags:
-CXX := mpicc
+CXX := mpic++
 CXXFLAGS_DEBUG := -g -DDEBUG
 CXXFLAGS_OPT := -O3 -finline-functions -m64 -funroll-loops
 CXXFLAGS_OPENMP := -fopenmp
-CXXFLAGS_STANDARD := -std=c11
+CXXFLAGS_STANDARD := -std=c++2a
 CXXFLAGS_OTHER := -Wall -Wextra -Wpedantic
 
 CXXFLAGS := $(CXXFLAGS_OPT) $(CXXFLAGS_OTHER) $(CPPFLAGS)
@@ -19,7 +21,7 @@ CXXFLAGS := $(CXXFLAGS_OPT) $(CXXFLAGS_OTHER) $(CPPFLAGS)
 CXXFLAGS += $(CXXFLAGS_OPENMP)
 LDFLAGS += $(CXXFLAGS_OPENMP)
 
-HDRS := $(wildcard $(SRCDIR)/*.h)
+HDRS := $(wildcard $(SRCDIR)/*.hpp)
 BINARIES := $(BUILDDIR)/bin2ppm $(BUILDDIR)/diffbin $(BUILDDIR)/pingpong $(BUILDDIR)/colcopy $(BUILDDIR)/karman
 
 define maketargetdir
@@ -47,11 +49,9 @@ clean :
 	rm -rf $(BUILDDIR)
 	rm -rf $(OUTDIR)
 
-.PHONY: clean all
-
 # Compiling the objects
 
-$(BUILDDIR)/%.o: $(SRCDIR)/%.c $(HDRS)
+$(BUILDDIR)/%.o: $(SRCDIR)/%.cpp $(HDRS)
 	$(compiling)
 
 # Linking the binaries
