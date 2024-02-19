@@ -1,37 +1,81 @@
-CC=gcc
-CFLAGS=-O3 -Wall -g -pg 
+BUILDDIR := build
+OUTDIR := out
 
-.c.o:
-	$(CC) -c $(CFLAGS) $<
+SRCDIR := src
 
-all: bin2ppm diffbin pingpong colcopy karman # karman-par
+CXXINCLUDES := $(shell bash generate_module_paths.bash 'include' | sed 's/^/-I/')
+CXXLIBS := $(shell bash generate_module_paths.bash 'lib' | sed 's/^/-L/')
 
-clean:
-	rm -f bin2ppm diffbin pingpong colcopy karman karman-par *.o
+HDRS := $(wildcard $(SRCDIR)/*.h)
 
-karman: alloc.o boundary.o init.o karman.o simulation.o
-	$(CC) $(CFLAGS) -o $@ $^ -lm
+CSRCS := $(wildcard $(SRCDIR)/*.c)
 
-karman-par: alloc.o boundary.o init.o karman-par.o simulation-par.o
-	$(CC) $(CFLAGS) -o $@ $^ -lm
+OBJS := $(CSRCS:$(SRCDIR)/%.c=$(BUILDDIR)/%.o)
 
-bin2ppm: bin2ppm.o alloc.o
-	$(CC) $(CFLAGS) -o $@ $^ -lm
+# g++ flags:
+CXX := mpicc
+CXXFLAGS_DEBUG := -g -DDEBUG
+CXXFLAGS_OPT := -O3 -finline-functions -m64 -funroll-loops
+CXXFLAGS_OPENMP := -fopenmp
+CXXFLAGS_STANDARD := -std=c11
+CXXFLAGS_OTHER := -Wall -Wextra -Wpedantic
 
-diffbin: diffbin.c
-	$(CC) $(CFLAGS) -o $@ $^ -lm
+LD := $(CXX)
 
-pingpong: pingpong.o
-	$(CC) $(CFLAGS) -o $@ $^
+CXXFLAGS := $(CXXFLAGS_OPT) $(CXXFLAGS_OTHER) $(CPPFLAGS)
 
-colcopy: colcopy.o alloc.o
-	$(CC) $(CFLAGS) -o $@ $^
+# add openmp flags (comment out for serial build)
+CXXFLAGS += $(CXXFLAGS_OPENMP)
+LDFLAGS += $(CXXFLAGS_OPENMP)
 
-bin2ppm.o        : alloc.h datadef.h
-boundary.o       : datadef.h
-colcopy.o        : alloc.h
-init.o           : datadef.h
-karman.o         : alloc.h boundary.h datadef.h init.h simulation.h
-karman-par.o     : alloc.h boundary.h datadef.h init.h simulation.h
-simulation.o     : datadef.h init.h
-simulation-par.o : datadef.h init.h
+HDRS := $(wildcard $(SRCDIR)/*.h)
+BINARIES := $(BUILDDIR)/bin2ppm $(BUILDDIR)/diffbin $(BUILDDIR)/pingpong $(BUILDDIR)/colcopy $(BUILDDIR)/karman
+
+define maketargetdir
+	-@mkdir -p $(dir $@) > /dev/null 2>&1
+endef
+
+define linking
+	@echo linking $@
+	$(maketargetdir)
+	$(LD) $(LDFLAGS) $(CXXLIBS) $(CXXFLAGS_STANDARD) -o $@ $^
+endef
+
+define compiling
+	@echo compiling $<
+	$(maketargetdir)
+	$(CXX) $(CXXFLAGS) $(CXXFLAGS_STANDARD) $(CXXINCLUDES) -c -o $@ $<
+endef
+
+# Universal targets
+
+all : $(BINARIES)
+
+clean :
+	rm -f $(BINARIES) $(OBJS)
+	rm -rf $(BUILDDIR)
+	rm -rf $(OUTDIR)
+
+.PHONY: clean all
+
+# Compiling the objects
+
+$(BUILDDIR)/%.o: $(SRCDIR)/%.c $(HDRS)
+	$(compiling)
+
+# Linking the binaries
+
+$(BUILDDIR)/karman: $(BUILDDIR)/alloc.o $(BUILDDIR)/boundary.o $(BUILDDIR)/init.o $(BUILDDIR)/karman.o $(BUILDDIR)/simulation.o
+	$(linking)
+
+$(BUILDDIR)/bin2ppm: $(BUILDDIR)/bin2ppm.o $(BUILDDIR)/alloc.o
+	$(linking)
+
+$(BUILDDIR)/diffbin: $(BUILDDIR)/diffbin.o
+	$(linking)
+
+$(BUILDDIR)/pingpong: $(BUILDDIR)/pingpong.o
+	$(linking)
+
+$(BUILDDIR)/colcopy: $(BUILDDIR)/colcopy.o $(BUILDDIR)/alloc.o
+	$(linking)
