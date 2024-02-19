@@ -1,3 +1,5 @@
+#pragma once
+
 #define C_B      0x0000   /* This cell is an obstacle/boundary cell */
 #define B_N      0x0001   /* This obstacle cell has a fluid cell to the north */
 #define B_S      0x0002   /* This obstacle cell has a fluid cell to the south */

@@ -1,38 +1,39 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cerrno>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
 #include <getopt.h>
-#include <errno.h>
-#include <math.h>
+#include <string>
 
 static void print_usage(void);
+
 static void print_version(void);
+
 static void print_help(void);
 
-static char *progname;
+static char* progname;
 
 #define PACKAGE "diffbin"
 #define VERSION "1.0"
 
 /* Command line options */
 static struct option long_opts[] = {
-    { "help",    0, NULL, 'h' },
-    { "version", 0, NULL, 'V' },
-    { "epsilon", 1, NULL, 'e' },
-    { "mode",    1, NULL, 'm' },
-    { 0,           0, 0,   0  }
+    {"help", 0, NULL, 'h'},
+    {"version", 0, NULL, 'V'},
+    {"epsilon", 1, NULL, 'e'},
+    {"mode", 1, NULL, 'm'},
+    {0, 0, 0, 0}
 };
 
 #define GETOPTS "e:hm:V"
 
 #define MODE_DIFF 0
 #define MODE_OUTPUT_U 1
-#define MODE_OUTPUT_V 2 
-#define MODE_OUTPUT_P 3 
-#define MODE_OUTPUT_FLAGS 4 
+#define MODE_OUTPUT_V 2
+#define MODE_OUTPUT_P 3
+#define MODE_OUTPUT_FLAGS 4
 
-int main(int argc, char **argv)
-{
+int main(int argc, char** argv) {
     FILE *f1, *f2;
     int imax, jmax, i, j;
 
@@ -87,21 +88,21 @@ int main(int argc, char **argv)
         print_help();
         return 0;
     }
-    
+
     if (show_usage || optind != (argc - 2)) {
         print_usage();
         return 1;
     }
 
 
-    if ((f1 = fopen(argv[optind], "rb"))  == NULL) {
+    if ((f1 = fopen(argv[optind], "rb")) == NULL) {
         fprintf(stderr, "Could not open '%s': %s\n", argv[optind],
-            strerror(errno));
+                strerror(errno));
         return 1;
     }
-    if ((f2 = fopen(argv[optind+1], "rb"))  == NULL) {
-        fprintf(stderr, "Could not open '%s': %s\n", argv[optind+1],
-            strerror(errno));
+    if ((f2 = fopen(argv[optind + 1], "rb")) == NULL) {
+        fprintf(stderr, "Could not open '%s': %s\n", argv[optind + 1],
+                strerror(errno));
         return 1;
     }
 
@@ -121,7 +122,7 @@ int main(int argc, char **argv)
     fread(&ylength2, sizeof(float), 1, f2);
     if (xlength1 != xlength2 || ylength1 != ylength2) {
         printf("Image domain dimensions differ! (%gx%g vs %gx%g)\n",
-            xlength1, ylength1, xlength2, ylength2);
+               xlength1, ylength1, xlength2, ylength2);
         return 1;
     }
 
@@ -157,7 +158,7 @@ int main(int argc, char **argv)
             dflags = flags1[j] - flags2[j];
             switch (mode) {
                 case MODE_DIFF:
-                    if(fpclassify(du) == FP_NAN ||
+                    if (fpclassify(du) == FP_NAN ||
                         fpclassify(dv) == FP_NAN ||
                         fpclassify(dp) == FP_NAN ||
                         fpclassify(du) == FP_INFINITE ||
@@ -167,20 +168,20 @@ int main(int argc, char **argv)
                     }
                     if (fabs(du) > epsilon || fabs(dv) > epsilon ||
                         fabs(dp) > epsilon || fabs(dflags) > epsilon) {
-                        diff_found = 1; 
+                        diff_found = 1;
                     }
                     break;
                 case MODE_OUTPUT_U:
-                    printf("%g%c", du, (j==jmax+1)?'\n':' ');
+                    printf("%g%c", du, (j == jmax + 1) ? '\n' : ' ');
                     break;
                 case MODE_OUTPUT_V:
-                    printf("%g%c", dv, (j==jmax+1)?'\n':' ');
+                    printf("%g%c", dv, (j == jmax + 1) ? '\n' : ' ');
                     break;
                 case MODE_OUTPUT_P:
-                    printf("%g%c", dp, (j==jmax+1)?'\n':' ');
+                    printf("%g%c", dp, (j == jmax + 1) ? '\n' : ' ');
                     break;
                 case MODE_OUTPUT_FLAGS:
-                    printf("%d%c", dflags, (j==jmax+1)?'\n':' ');
+                    printf("%d%c", dflags, (j == jmax + 1) ? '\n' : ' ');
                     break;
             }
         }
@@ -195,20 +196,17 @@ int main(int argc, char **argv)
     return 0;
 }
 
-static void print_usage(void)
-{
+static void print_usage(void) {
     fprintf(stderr, "Try '%s --help' for more information.\n", progname);
 }
 
-static void print_version(void)
-{
+static void print_version(void) {
     fprintf(stderr, "%s %s\n", PACKAGE, VERSION);
 }
 
-static void print_help(void)
-{
+static void print_help(void) {
     fprintf(stderr, "%s. A utility to compare karman state files.\n\n",
-        PACKAGE);
+            PACKAGE);
     fprintf(stderr, "Usage %s [OPTIONS] FILE1 FILE2\n\n", progname);
     fprintf(stderr, "  -h, --help            Print a summary of the options\n");
     fprintf(stderr, "  -V, --version         Print the version number\n");
