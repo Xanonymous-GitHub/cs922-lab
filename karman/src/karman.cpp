@@ -52,15 +52,15 @@ int *ileft, *iright; /* Array bounds for each processor */
 
 /* Command line options */
 static struct option long_opts[] = {
-    {"del-t", 1, NULL, 'd'},
-    {"help", 0, NULL, 'h'},
-    {"imax", 1, NULL, 'x'},
-    {"infile", 1, NULL, 'i'},
-    {"jmax", 1, NULL, 'y'},
-    {"outfile", 1, NULL, 'o'},
-    {"t-end", 1, NULL, 't'},
-    {"verbose", 1, NULL, 'v'},
-    {"version", 1, NULL, 'V'},
+    {"del-t", 1, nullptr, 'd'},
+    {"help", 0, nullptr, 'h'},
+    {"imax", 1, nullptr, 'x'},
+    {"infile", 1, nullptr, 'i'},
+    {"jmax", 1, nullptr, 'y'},
+    {"outfile", 1, nullptr, 'o'},
+    {"t-end", 1, nullptr, 't'},
+    {"verbose", 1, nullptr, 'v'},
+    {"version", 1, nullptr, 'V'},
     {0, 0, 0, 0}
 };
 #define GETOPTS "d:hi:o:t:v:Vx:y:"
@@ -102,7 +102,7 @@ int main(int argc, char* argv[]) {
     outfile = strdup("karman.bin");
 
     int optc;
-    while ((optc = getopt_long(argc, argv, GETOPTS, long_opts, NULL)) != -1) {
+    while ((optc = getopt_long(argc, argv, GETOPTS, long_opts, nullptr)) != -1) {
         switch (optc) {
             case 'h':
                 show_help = 1;
@@ -220,7 +220,7 @@ int main(int argc, char* argv[]) {
         apply_boundary_conditions(u, v, flag, imax, jmax, ui, vi);
     } /* End of main loop */
 
-    if (outfile != NULL && strcmp(outfile, "") != 0 && proc == 0) {
+    if (outfile != nullptr && strcmp(outfile, "") != 0 && proc == 0) {
         write_bin(u, v, p, flag, imax, jmax, xlength, ylength, outfile);
     }
 
@@ -252,7 +252,7 @@ void write_bin(
 
     fp = fopen(file, "wb");
 
-    if (fp == NULL) {
+    if (fp == nullptr) {
         fprintf(stderr, "Could not open file '%s': %s\n", file,
                 strerror(errno));
         return;
@@ -287,9 +287,9 @@ int read_bin(
     int i, j;
     FILE* fp;
 
-    if (file == NULL) return -1;
+    if (file == nullptr) return -1;
 
-    if ((fp = fopen(file, "rb")) == NULL) {
+    if ((fp = fopen(file, "rb")) == nullptr) {
         fprintf(stderr, "Could not open file '%s': %s\n", file,
                 strerror(errno));
         fprintf(stderr, "Generating default state instead.\n");

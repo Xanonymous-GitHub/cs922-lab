@@ -20,11 +20,11 @@ static char* progname;
 
 /* Command line options */
 static struct option long_opts[] = {
-    {"help", 0, NULL, 'h'},
-    {"version", 0, NULL, 'V'},
-    {"minsize", 1, NULL, 'm'},
-    {"maxsize", 1, NULL, 'n'},
-    {"count", 1, NULL, 'c'},
+    {"help", 0, nullptr, 'h'},
+    {"version", 0, nullptr, 'V'},
+    {"minsize", 1, nullptr, 'm'},
+    {"maxsize", 1, nullptr, 'n'},
+    {"count", 1, nullptr, 'c'},
     {0, 0, 0, 0}
 };
 
@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
     progname = argv[0];
 
     int optc;
-    while ((optc = getopt_long(argc, argv, GETOPTS, long_opts, NULL)) != -1) {
+    while ((optc = getopt_long(argc, argv, GETOPTS, long_opts, nullptr)) != -1) {
         switch (optc) {
             case 'h':
                 show_help = 1;

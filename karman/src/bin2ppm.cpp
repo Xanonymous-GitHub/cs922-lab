@@ -25,13 +25,13 @@ static char* progname;
 
 /* Command line options */
 static struct option long_opts[] = {
-    {"help", 0, NULL, 'h'},
-    {"infile", 1, NULL, 'i'},
-    {"outfile", 1, NULL, 'o'},
-    {"plot-psi", 0, NULL, 'p'},
-    {"plot-zeta", 0, NULL, 'z'},
-    {"version", 0, NULL, 'V'},
-    {"verbose", 1, NULL, 'v'},
+    {"help", 0, nullptr, 'h'},
+    {"infile", 1, nullptr, 'i'},
+    {"outfile", 1, nullptr, 'o'},
+    {"plot-psi", 0, nullptr, 'p'},
+    {"plot-zeta", 0, nullptr, 'z'},
+    {"version", 0, nullptr, 'V'},
+    {"verbose", 1, nullptr, 'v'},
     {0, 0, 0, 0}
 };
 #define GETOPTS "hi:o:pv:Vz"
@@ -50,12 +50,12 @@ int main(int argc, char** argv) {
     float vmax = -1e10, vmin = 1e10;
 
     int show_help = 0, show_usage = 0, show_version = 0;
-    char *infile = NULL, *outfile = NULL;
+    char *infile = nullptr, *outfile = nullptr;
     FILE *fin = stdin, *fout = stdout;
 
     progname = argv[0];
     int optc;
-    while ((optc = getopt_long(argc, argv, GETOPTS, long_opts, NULL)) != -1) {
+    while ((optc = getopt_long(argc, argv, GETOPTS, long_opts, nullptr)) != -1) {
         switch (optc) {
             case 'h':
                 show_help = 1;
@@ -67,13 +67,13 @@ int main(int argc, char** argv) {
                 verbose = atoi(optarg);
                 break;
             case 'i':
-                if (infile != NULL) {
+                if (infile != nullptr) {
                     free(infile);
                 }
                 infile = strdup(optarg);
                 break;
             case 'o':
-                if (outfile != NULL) {
+                if (outfile != nullptr) {
                     free(outfile);
                 }
                 outfile = strdup(optarg);
@@ -100,7 +100,7 @@ int main(int argc, char** argv) {
         return 0;
     }
 
-    if (infile != NULL) {
+    if (infile != nullptr) {
         fin = fopen(infile, "rb");
         if (!fin) {
             fprintf(stderr, "Could not open '%s'\n", infile);
@@ -108,7 +108,7 @@ int main(int argc, char** argv) {
         }
     }
 
-    if (outfile != NULL) {
+    if (outfile != nullptr) {
         fout = fopen(outfile, "wb");
         if (!fout) {
             fprintf(stderr, "Could not open '%s'\n", outfile);

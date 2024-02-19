@@ -18,10 +18,10 @@ static char* progname;
 
 /* Command line options */
 static struct option long_opts[] = {
-    {"help", 0, NULL, 'h'},
-    {"version", 0, NULL, 'V'},
-    {"epsilon", 1, NULL, 'e'},
-    {"mode", 1, NULL, 'm'},
+    {"help", 0, nullptr, 'h'},
+    {"version", 0, nullptr, 'V'},
+    {"epsilon", 1, nullptr, 'e'},
+    {"mode", 1, nullptr, 'm'},
     {0, 0, 0, 0}
 };
 
@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
     progname = argv[0];
 
     int optc;
-    while ((optc = getopt_long(argc, argv, GETOPTS, long_opts, NULL)) != -1) {
+    while ((optc = getopt_long(argc, argv, GETOPTS, long_opts, nullptr)) != -1) {
         switch (optc) {
             case 'h':
                 show_help = 1;
@@ -95,12 +95,12 @@ int main(int argc, char** argv) {
     }
 
 
-    if ((f1 = fopen(argv[optind], "rb")) == NULL) {
+    if ((f1 = fopen(argv[optind], "rb")) == nullptr) {
         fprintf(stderr, "Could not open '%s': %s\n", argv[optind],
                 strerror(errno));
         return 1;
     }
-    if ((f2 = fopen(argv[optind + 1], "rb")) == NULL) {
+    if ((f2 = fopen(argv[optind + 1], "rb")) == nullptr) {
         fprintf(stderr, "Could not open '%s': %s\n", argv[optind + 1],
                 strerror(errno));
         return 1;
@@ -205,8 +205,7 @@ static void print_version(void) {
 }
 
 static void print_help(void) {
-    fprintf(stderr, "%s. A utility to compare karman state files.\n\n",
-            PACKAGE);
+    fprintf(stderr, "%s. A utility to compare karman state files.\n\n",PACKAGE);
     fprintf(stderr, "Usage %s [OPTIONS] FILE1 FILE2\n\n", progname);
     fprintf(stderr, "  -h, --help            Print a summary of the options\n");
     fprintf(stderr, "  -V, --version         Print the version number\n");
