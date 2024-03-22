@@ -34,7 +34,7 @@ int main(int argc, char** argv) {
     t = MPI_Wtime();
 
     /* Allocate an COLS * ROWS array. */
-    float** matrix = alloc_floatmatrix(COLS, ROWS);
+    float** matrix = alloc_float_matrix(COLS, ROWS);
 
     /* Fill processor 1's matrix with numbers */
     for (i = 0; i < COLS; i++) {

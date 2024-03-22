@@ -185,12 +185,12 @@ int main(const int argc, char* const* argv) {
     const float delx = x_length / static_cast<float>(imax);
     const float dely = y_length / static_cast<float>(jmax);
 
-    const auto& u = alloc_floatmatrix(imax + 2, jmax + 2);
-    const auto& v = alloc_floatmatrix(imax + 2, jmax + 2);
-    const auto& p = alloc_floatmatrix(imax + 2, jmax + 2);
-    const auto& psi = alloc_floatmatrix(imax + 2, jmax + 2);
-    const auto& zeta = alloc_floatmatrix(imax + 2, jmax + 2);
-    const auto& flag = alloc_charmatrix(imax + 2, jmax + 2);
+    const auto& u = alloc_float_matrix(imax + 2, jmax + 2);
+    const auto& v = alloc_float_matrix(imax + 2, jmax + 2);
+    const auto& p = alloc_float_matrix(imax + 2, jmax + 2);
+    const auto& psi = alloc_float_matrix(imax + 2, jmax + 2);
+    const auto& zeta = alloc_float_matrix(imax + 2, jmax + 2);
+    const auto& flag = alloc_char_matrix(imax + 2, jmax + 2);
 
     if (verbose > 1) {
         std::cout << "imax: " << imax << "\n";

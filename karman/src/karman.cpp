@@ -158,13 +158,13 @@ int main(int argc, char* argv[]) {
     dely = ylength / jmax;
 
     /* Allocate arrays */
-    u = alloc_floatmatrix(imax + 2, jmax + 2);
-    v = alloc_floatmatrix(imax + 2, jmax + 2);
-    f = alloc_floatmatrix(imax + 2, jmax + 2);
-    g = alloc_floatmatrix(imax + 2, jmax + 2);
-    p = alloc_floatmatrix(imax + 2, jmax + 2);
-    rhs = alloc_floatmatrix(imax + 2, jmax + 2);
-    flag = alloc_charmatrix(imax + 2, jmax + 2);
+    u = alloc_float_matrix(imax + 2, jmax + 2);
+    v = alloc_float_matrix(imax + 2, jmax + 2);
+    f = alloc_float_matrix(imax + 2, jmax + 2);
+    g = alloc_float_matrix(imax + 2, jmax + 2);
+    p = alloc_float_matrix(imax + 2, jmax + 2);
+    rhs = alloc_float_matrix(imax + 2, jmax + 2);
+    flag = alloc_char_matrix(imax + 2, jmax + 2);
 
     if (!u || !v || !f || !g || !p || !rhs || !flag) {
         fprintf(stderr, "Couldn't allocate memory for matrices.\n");
