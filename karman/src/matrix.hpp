@@ -35,7 +35,7 @@ public:
     bool empty() const noexcept;
 
     template<KindOfSize... K>
-    T& at(const K&... indices) noexcept {
+    T& at(const K& ... indices) noexcept {
         return at_impl({static_cast<m_size_t<T>>(indices)...});
     }
 };
@@ -73,10 +73,10 @@ public:
 
     ~NDMatrix() override = default;
 
-    NDMatrix(const std::initializer_list<m_size_t<T>>& shape) noexcept : _shape(shape) {
+    NDMatrix(const std::initializer_list<m_size_t<T>>& shape) noexcept: _shape(shape) {
         m_size_t<T> size = 1;
-        for (const auto& dimention: _shape) {
-            size *= dimention;
+        for (const auto& dimension: _shape) {
+            size *= dimension;
         }
         _data.resize(size);
     }
@@ -86,9 +86,9 @@ template<typename T>
 T& NDMatrix<T>::at_impl(const std::initializer_list<m_size_t<T>>& indices) noexcept {
     m_size_t<T> index = 0;
     m_size_t<T> stride = 1;
-    for (const auto& dimention: _shape) {
-        index += stride * indices.begin()[dimention];
-        stride *= _shape.cbegin()[dimention];
+    for (const auto& dimension: _shape) {
+        index += stride * indices.begin()[dimension];
+        stride *= _shape.cbegin()[dimension];
     }
 
     return _data.begin()[index];
@@ -116,7 +116,7 @@ public:
     TwoDMatrix(
         const m_size_t<T>& row_numbers,
         const m_size_t<T>& col_numbers
-    ) noexcept : _row_numbers(row_numbers), _col_numbers(col_numbers) {
+    ) noexcept: _row_numbers(row_numbers), _col_numbers(col_numbers) {
         _data.resize(row_numbers * col_numbers);
     }
 };
@@ -152,7 +152,7 @@ public:
         const m_size_t<T>& depth,
         const m_size_t<T>& row_numbers,
         const m_size_t<T>& col_numbers
-    ) noexcept : _depth(depth), _row_numbers(row_numbers), _col_numbers(col_numbers) {
+    ) noexcept: _depth(depth), _row_numbers(row_numbers), _col_numbers(col_numbers) {
         _data.resize(depth * row_numbers * col_numbers);
     }
 };
@@ -167,7 +167,7 @@ T& ThreeDMatrix<T>::at_impl(const std::initializer_list<m_size_t<T>>& indices) n
 
 template<typename T, KindOfSize... S>
 [[nodiscard]]
-static matrix<T> make_matrix(const S&... shape) {
+static matrix<T> make_matrix(const S& ... shape) {
     if constexpr (sizeof...(shape) == 2) {
         const auto [row_numbers, col_numbers] = std::make_tuple(shape...);
         return std::make_shared<TwoDMatrix<T>>(row_numbers, col_numbers);
