@@ -191,11 +191,11 @@ int main(int argc, char* argv[]) {
         apply_boundary_conditions(u, v, flag, imax, jmax, ui, vi);
     }
 
+    ifluid = (imax * jmax) - ibound;
+
     /* Main loop */
     for (t = 0.0; t < t_end; t += del_t, iters++) {
         set_timestep_interval(&del_t, imax, jmax, delx, dely, u, v, Re, tau);
-
-        ifluid = (imax * jmax) - ibound;
 
         compute_tentative_velocity(u, v, f, g, flag, imax, jmax,
                                    del_t, delx, dely, gamma, Re);
