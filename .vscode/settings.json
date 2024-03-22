@@ -64,6 +64,7 @@
         "vector": "cpp",
         "__tree": "cpp",
         "iomanip": "cpp",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "alloc.h": "c"
     }
 }
