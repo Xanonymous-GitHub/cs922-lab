@@ -8,35 +8,36 @@
 #define PONG 2
 
 static void print_usage(void);
+
 static void print_version(void);
+
 static void print_help(void);
 
-static char *progname;
+static char* progname;
 
 #define PACKAGE "pingpong"
 #define VERSION "1.0"
 
 /* Command line options */
 static struct option long_opts[] = {
-    { "help",    0, NULL, 'h' },
-    { "version", 0, NULL, 'V' },
-    { "minsize", 1, NULL, 'm' },
-    { "maxsize", 1, NULL, 'n' },
-    { "count",   1, NULL, 'c' },
-    { 0,         0, 0,    0   } 
+    {"help",    0, NULL, 'h'},
+    {"version", 0, NULL, 'V'},
+    {"minsize", 1, NULL, 'm'},
+    {"maxsize", 1, NULL, 'n'},
+    {"count",   1, NULL, 'c'},
+    {0,         0, 0,    0}
 };
 
 #define GETOPTS "c:hm:n:V"
 
-int main(int argc, char **argv)
-{
+int main(int argc, char** argv) {
     int i, n, p, size;
     int iters = 1000, minsize = 1, maxsize = 32768;
     int show_help = 0, show_usage = 0, show_version = 0;
     double start;
 
     progname = argv[0];
-    
+
     int optc;
     while ((optc = getopt_long(argc, argv, GETOPTS, long_opts, NULL)) != -1) {
         switch (optc) {
@@ -85,7 +86,7 @@ int main(int argc, char **argv)
         print_usage();
         return 1;
     }
-    
+
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &n);
     MPI_Comm_rank(MPI_COMM_WORLD, &p);
@@ -97,7 +98,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    char *dummy;
+    char* dummy;
     dummy = malloc(maxsize);
     for (size = minsize; size <= maxsize; size *= 2) {
         start = MPI_Wtime();
@@ -117,29 +118,25 @@ int main(int argc, char **argv)
                 MPI_Recv(dummy, size, MPI_CHAR, 1, PONG, MPI_COMM_WORLD, &s);
             }
         }
-        if (p == 0) { 
+        if (p == 0) {
             printf("%d %d byte pingpongs took %f seconds.\n", iters,
-                size, MPI_Wtime() - start);
+                   size, MPI_Wtime() - start);
         }
     }
     MPI_Finalize();
     return 0;
 }
 
-static void print_usage(void)
-{
+static void print_usage(void) {
     fprintf(stderr, "Try '%s --help' for more information.\n", progname);
 }
 
-static void print_version(void)
-{
+static void print_version(void) {
     fprintf(stderr, "%s %s\n", PACKAGE, VERSION);
 }
 
-static void print_help(void)
-{
-    fprintf(stderr, "%s. A utility for benchmarking MPI communications.\n\n",
-        PACKAGE);
+static void print_help(void) {
+    fprintf(stderr, "%s. A utility for benchmarking MPI communications.\n\n", PACKAGE);
     fprintf(stderr, "Usage %s [OPTIONS]\n\n", progname);
     fprintf(stderr, "  -h, --help           Print a summary of the options\n");
     fprintf(stderr, "  -V, --version        Print the version number\n");

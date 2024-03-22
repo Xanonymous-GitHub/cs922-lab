@@ -3,7 +3,7 @@
 #include "alloc.h"
 
 #define ROWS 9
-#define COLS 7 
+#define COLS 7
 
 /* A sample program that demonstrates how to time an MPI program, and how to
  * send (parts of) the rows and columns in a two-dimensional array between
@@ -14,11 +14,11 @@
  * use of derived MPI_Datatypes to perform the copy.
  */
 
-void zeromatrix(float **matrix);
-void printmatrix(char *title, float **matrix);
+void zeromatrix(float** matrix);
 
-int main(int argc, char **argv)
-{
+void printmatrix(char* title, float** matrix);
+
+int main(int argc, char** argv) {
     double t;
     int i, j, n, p;
     MPI_Init(&argc, &argv);
@@ -34,11 +34,11 @@ int main(int argc, char **argv)
     t = MPI_Wtime();
 
     /* Allocate an COLS * ROWS array. */
-    float **matrix = alloc_floatmatrix(COLS, ROWS);
+    float** matrix = alloc_floatmatrix(COLS, ROWS);
 
     /* Fill processor 1's matrix with numbers */
     for (i = 0; i < COLS; i++) {
-        for ( j = 0; j < ROWS; j++) {
+        for (j = 0; j < ROWS; j++) {
             matrix[i][j] = (i * 10) + j;
         }
     }
@@ -62,22 +62,22 @@ int main(int argc, char **argv)
         printmatrix("After receiving column 6, rows 3-5:", matrix);
 
         zeromatrix(matrix);
-        MPI_Recv(matrix[3], ROWS*2, MPI_FLOAT, 1, 0, MPI_COMM_WORLD, &s);
+        MPI_Recv(matrix[3], ROWS * 2, MPI_FLOAT, 1, 0, MPI_COMM_WORLD, &s);
         printmatrix("After receiving column 3 and 4:", matrix);
 
         zeromatrix(matrix);
-        MPI_Recv(matrix[0], ROWS*COLS, MPI_FLOAT, 1, 0, MPI_COMM_WORLD, &s);
+        MPI_Recv(matrix[0], ROWS * COLS, MPI_FLOAT, 1, 0, MPI_COMM_WORLD, &s);
         printmatrix("After receiving all columns:", matrix);
 
         zeromatrix(matrix);
         MPI_Recv(&matrix[0][6], 1, fullrowtype, 1, 0, MPI_COMM_WORLD, &s);
         printmatrix("After receiving row 6:", matrix);
-       
-        zeromatrix(matrix); 
+
+        zeromatrix(matrix);
         MPI_Recv(&matrix[0][1], 1, partrowtype, 1, 0, MPI_COMM_WORLD, &s);
         printmatrix("After receiving row 1 cols 0-2:", matrix);
-        
-        zeromatrix(matrix); 
+
+        zeromatrix(matrix);
         MPI_Recv(&matrix[4][1], 1, partrowtype, 1, 0, MPI_COMM_WORLD, &s);
         printmatrix("After receiving row 1 cols 4-6:", matrix);
     } else {
@@ -88,17 +88,17 @@ int main(int argc, char **argv)
         MPI_Send(&matrix[6][2], 4, MPI_FLOAT, 0, 0, MPI_COMM_WORLD);
 
         /* Send columns 3 and 4 to processor 0 */
-        MPI_Send(matrix[3], ROWS*2, MPI_FLOAT, 0, 0, MPI_COMM_WORLD);
+        MPI_Send(matrix[3], ROWS * 2, MPI_FLOAT, 0, 0, MPI_COMM_WORLD);
 
         /* Send the entire matrix (ie all columns) to processor 0 */
-        MPI_Send(matrix[0], ROWS*COLS, MPI_FLOAT, 0, 0, MPI_COMM_WORLD);
+        MPI_Send(matrix[0], ROWS * COLS, MPI_FLOAT, 0, 0, MPI_COMM_WORLD);
 
         /* Send row 6 to processor 0 */
         MPI_Send(&matrix[0][6], 1, fullrowtype, 0, 0, MPI_COMM_WORLD);
-        
+
         /* Send row 1 cols 0-2 to processor 0 */
         MPI_Send(&matrix[0][1], 1, partrowtype, 0, 0, MPI_COMM_WORLD);
-        
+
         /* Send row 1 cols 4-6 to processor 0 */
         MPI_Send(&matrix[4][1], 1, partrowtype, 0, 0, MPI_COMM_WORLD);
     }
@@ -118,21 +118,20 @@ int main(int argc, char **argv)
     return 0;
 }
 
-void zeromatrix(float **matrix)
-{
+void zeromatrix(float** matrix) {
     int i, j;
-    for ( j = 0; j < ROWS; j++) {
-        for ( i = 0; i < COLS; i++) {
+    for (j = 0; j < ROWS; j++) {
+        for (i = 0; i < COLS; i++) {
             matrix[i][j] = 0.0;
         }
     }
 }
-void printmatrix(char *title, float **matrix)
-{
+
+void printmatrix(char* title, float** matrix) {
     int i, j;
     printf("%s\n", title);
-    for ( j = 0; j < ROWS; j++) {
-        for ( i = 0; i < COLS; i++) {
+    for (j = 0; j < ROWS; j++) {
+        for (i = 0; i < COLS; i++) {
             printf("%02g ", matrix[i][j]);
         }
         printf("\n");
