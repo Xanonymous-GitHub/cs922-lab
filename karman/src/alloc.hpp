@@ -1,7 +1,7 @@
 #pragma once
 
-float** alloc_floatmatrix(int cols, int rows);
+#include "matrix.hpp"
 
-char** alloc_charmatrix(int cols, int rows);
+matrix<float> alloc_floatmatrix(const int& cols, const int& rows);
 
-void free_matrix(void* m);
+matrix<char> alloc_charmatrix(const int& cols, const int& rows);
