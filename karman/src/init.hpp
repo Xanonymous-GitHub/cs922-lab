@@ -1,5 +1,21 @@
 #pragma once
 
-void load_flag_from_pgm(char** flag, int imax, int jmax, char* filename);
+#include <string_view>
+#include <memory>
+#include "matrix.hpp"
 
-void init_flag(char** flag, int imax, int jmax, float delx, float dely, int* ibound);
+void load_flag_from_pgm(
+    const matrix<char>& flag,
+    const int& imax,
+    const int& jmax,
+    const std::string_view& filename
+);
+
+void init_flag(
+    const matrix<char>& flag,
+    const int& imax,
+    const int& jmax,
+    const float& delx,
+    const float& dely,
+    const std::shared_ptr<int>& ibound
+);
