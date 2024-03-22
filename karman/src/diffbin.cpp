@@ -109,13 +109,13 @@ int main(int argc, char** argv) {
 
 
     std::ifstream f1(argv[optind], std::ios::binary);
-    if (!f1.is_open()) {
+    if (!f1) {
         std::cerr << "Could not open '" << argv[optind] << "': " << std::strerror(errno) << "\n";
         return 1;
     }
 
     std::ifstream f2(argv[optind + 1], std::ios::binary);
-    if (!f2.is_open()) {
+    if (!f2) {
         std::cerr << "Could not open '" << argv[optind + 1] << "': " << std::strerror(errno) << "\n";
         return 1;
     }
