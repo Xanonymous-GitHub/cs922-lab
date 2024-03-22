@@ -3,6 +3,8 @@
 #include <string.h>
 #include <getopt.h>
 #include <errno.h>
+
+#include <mpi.h>
 #include "alloc.h"
 #include "boundary.h"
 #include "datadef.h"
@@ -48,6 +50,7 @@ int* ileft, * iright;           /* Array bounds for each processor */
 
 #define PACKAGE "karman"
 #define VERSION "1.0"
+#define SHOULD_RECORD_TIME 1
 
 /* Command line options */
 static struct option long_opts[] = {
@@ -153,6 +156,8 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
+    MPI_Init(&argc, &argv);
+
     delx = xlength / imax;
     dely = ylength / jmax;
 
@@ -167,6 +172,7 @@ int main(int argc, char* argv[]) {
 
     if (!u || !v || !f || !g || !p || !rhs || !flag) {
         fprintf(stderr, "Couldn't allocate memory for matrices.\n");
+        MPI_Finalize();
         return 1;
     }
 
@@ -175,8 +181,21 @@ int main(int argc, char* argv[]) {
 
     if (init_case > 0) {
         /* Error while reading file */
+        MPI_Finalize();
         return 1;
     }
+
+    #if SHOULD_RECORD_TIME
+        double last_time_record = MPI_Wtime();
+        double duration_of_1 = 0.0;
+        double duration_of_2 = 0.0;
+        double duration_of_3 = 0.0;
+        double duration_of_4 = 0.0;
+        double duration_of_5 = 0.0;
+        double duration_of_6 = 0.0;
+        double duration_of_7 = 0.0;
+        double duration_of_8 = 0.0;
+    #endif
 
     if (init_case < 0) {
         /* Set initial values if file doesn't exist */
@@ -187,24 +206,97 @@ int main(int argc, char* argv[]) {
                 p[i][j] = 0.0;
             }
         }
+
+        // 1: init_flag
+        #if SHOULD_RECORD_TIME
+            if (verbose > 1) {
+                last_time_record = MPI_Wtime();
+            }
+        #endif
         init_flag(flag, imax, jmax, delx, dely, &ibound);
+        #if SHOULD_RECORD_TIME
+            if (verbose > 1) {
+                duration_of_1 += MPI_Wtime() - last_time_record;
+            }
+        #endif
+        
+        // 2: apply_boundary_conditions
+        #if SHOULD_RECORD_TIME
+            if (verbose > 1) {
+                last_time_record = MPI_Wtime();
+            }
+        #endif
         apply_boundary_conditions(u, v, flag, imax, jmax, ui, vi);
+        #if SHOULD_RECORD_TIME
+            if (verbose > 1) {
+                duration_of_2 += MPI_Wtime() - last_time_record;
+            }
+        #endif
     }
 
     ifluid = (imax * jmax) - ibound;
 
     /* Main loop */
     for (t = 0.0; t < t_end; t += del_t, iters++) {
+        // 3: set_timestep_interval
+        #if SHOULD_RECORD_TIME
+            if (verbose > 1) {
+                last_time_record = MPI_Wtime();
+            }
+        #endif
         set_timestep_interval(&del_t, imax, jmax, delx, dely, u, v, Re, tau);
+        #if SHOULD_RECORD_TIME
+            if (verbose > 1) {
+                duration_of_3 += MPI_Wtime() - last_time_record;
+            }
+        #endif
 
-        compute_tentative_velocity(u, v, f, g, flag, imax, jmax,
-                                   del_t, delx, dely, gamma, Re);
+        // D: compute_tentative_velocity
+        #if SHOULD_RECORD_TIME
+            if (verbose > 1) {
+                last_time_record = MPI_Wtime();
+            }
+        #endif
+        compute_tentative_velocity(
+            u, v, f, g, flag, 
+            imax, jmax, del_t, delx, dely, gamma, Re
+        );
+        #if SHOULD_RECORD_TIME
+            if (verbose > 1) {
+                duration_of_4 += MPI_Wtime() - last_time_record;
+            }
+        #endif
 
+        // E: compute_rhs
+        #if SHOULD_RECORD_TIME
+            if (verbose > 1) {
+                last_time_record = MPI_Wtime();
+            }
+        #endif
         compute_rhs(f, g, rhs, flag, imax, jmax, del_t, delx, dely);
+        #if SHOULD_RECORD_TIME
+            if (verbose > 1) {
+                duration_of_5 += MPI_Wtime() - last_time_record;
+            }
+        #endif
 
         if (ifluid > 0) {
-            itersor = poisson(p, rhs, flag, imax, jmax, delx, dely,
-                              eps, itermax, omega, &res, ifluid);
+            // F: poisson
+            #if SHOULD_RECORD_TIME
+                if (verbose > 1) {
+                    last_time_record = MPI_Wtime();
+                }
+            #endif
+            itersor = poisson(
+                p, rhs, flag, imax, 
+                jmax, delx, dely, eps,
+                itermax, omega, &res, ifluid
+            );
+            #if SHOULD_RECORD_TIME
+                if (verbose > 1) {
+                    duration_of_6 += MPI_Wtime() - last_time_record;
+                }
+            #endif
         } else {
             itersor = 0;
         }
@@ -214,9 +306,31 @@ int main(int argc, char* argv[]) {
                    iters, t + del_t, del_t, itersor, res, ibound);
         }
 
+        // G: update_velocity
+        #if SHOULD_RECORD_TIME
+            if (verbose > 1) {
+                last_time_record = MPI_Wtime();
+            }
+        #endif
         update_velocity(u, v, f, g, p, flag, imax, jmax, del_t, delx, dely);
+        #if SHOULD_RECORD_TIME
+            if (verbose > 1) {
+                duration_of_7 += MPI_Wtime() - last_time_record;
+            }
+        #endif
 
+        // H: apply_boundary_conditions
+        #if SHOULD_RECORD_TIME
+            if (verbose > 1) {
+                last_time_record = MPI_Wtime();
+            }
+        #endif
         apply_boundary_conditions(u, v, flag, imax, jmax, ui, vi);
+        #if SHOULD_RECORD_TIME
+            if (verbose > 1) {
+                duration_of_8 += MPI_Wtime() - last_time_record;
+            }
+        #endif
     } /* End of main loop */
 
     if (outfile != NULL && strcmp(outfile, "") != 0 && proc == 0) {
@@ -231,6 +345,20 @@ int main(int argc, char* argv[]) {
     free_matrix(rhs);
     free_matrix(flag);
 
+    #if SHOULD_RECORD_TIME
+        if (verbose > 1 && proc == 0) {
+            printf("\n>>> init_flag [1]: %f s\n\n", duration_of_1);
+            printf("\n>>> apply_boundary_conditions [2]: %f s\n\n", duration_of_2);
+            printf("\n>>> set_timestep_interval [3]: %f s\n\n", duration_of_3);
+            printf("\n>>> compute_tentative_velocity [4]: %f s\n\n", duration_of_4);
+            printf("\n>>> compute_rhs [5]: %f s\n\n", duration_of_5);
+            printf("\n>>> poisson [6]: %f s\n\n", duration_of_6);
+            printf("\n>>> update_velocity [7]: %f s\n\n", duration_of_7);
+            printf("\n>>> apply_boundary_conditions [8]: %f s\n\n", duration_of_8);
+        }
+    #endif
+
+    MPI_Finalize();
     return 0;
 }
 
