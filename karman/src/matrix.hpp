@@ -29,7 +29,7 @@ public:
 
     virtual ~Matrix() = default;
 
-    void clear() const noexcept;
+    void clear() noexcept;
 
     [[nodiscard]]
     bool empty() const noexcept;
@@ -42,7 +42,7 @@ public:
 
 
 template<typename T>
-void Matrix<T>::clear() const noexcept {
+void Matrix<T>::clear() noexcept {
     _data.clear();
     _data.shrink_to_fit();
 }
