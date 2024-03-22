@@ -10,6 +10,7 @@
         "ms-vscode.makefile-tools",
         "idma88.omp-pragma",
         "adamj.mpi-snippets",
-        "jeff-hykin.better-cpp-syntax"
+        "jeff-hykin.better-cpp-syntax",
+        "ngtystr.ppm-pgm-viewer-for-vscode"
     ]
 }
