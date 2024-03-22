@@ -1,11 +1,13 @@
 #pragma once
 
+#include "matrix.hpp"
+
 void apply_boundary_conditions(
-    float** u,
-    float** v,
-    char** flag,
-    int imax,
-    int jmax,
-    float ui,
-    float vi
+    const matrix<float>& u,
+    const matrix<float>& v,
+    const matrix<char>& flag,
+    const int& imax,
+    const int& jmax,
+    const float& ui,
+    const float& vi
 );
