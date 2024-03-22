@@ -1,52 +1,65 @@
 #include <cerrno>
 #include <cmath>
-#include <cstdio>
-#include <cstdlib>
 #include <getopt.h>
+#include <cstring>
 #include <string>
-
-static void print_usage(void);
-
-static void print_version(void);
-
-static void print_help(void);
-
-static char* progname;
+#include <string_view>
+#include <array>
+#include <iostream>
+#include <fstream>
+#include <vector>
 
 #define PACKAGE "diffbin"
 #define VERSION "1.0"
-
-/* Command line options */
-static struct option long_opts[] = {
-    {"help", 0, nullptr, 'h'},
-    {"version", 0, nullptr, 'V'},
-    {"epsilon", 1, nullptr, 'e'},
-    {"mode", 1, nullptr, 'm'},
-    {0, 0, 0, 0}
-};
-
 #define GETOPTS "e:hm:V"
-
 #define MODE_DIFF 0
 #define MODE_OUTPUT_U 1
 #define MODE_OUTPUT_V 2
 #define MODE_OUTPUT_P 3
 #define MODE_OUTPUT_FLAGS 4
 
-int main(int argc, char** argv) {
-    FILE *f1, *f2;
-    int imax, jmax, i, j;
+/* Command line options */
+static const std::array<option, 5> long_opts = {
+    option{"help", no_argument, nullptr, 'h'},
+    option{"version", no_argument, nullptr, 'V'},
+    option{"epsilon", required_argument, nullptr, 'e'},
+    option{"mode", required_argument, nullptr, 'm'},
+    option{nullptr, 0, nullptr, 0}
+};
 
-    float *u1, *u2, *v1, *v2, *p1, *p2;
-    char *flags1, *flags2;
+static void print_usage(const std::string_view& progname) {
+    std::cerr << "Try '" << progname << " --help' for more information.\n";
+}
+
+static void print_version() {
+    std::cout << PACKAGE << " " << VERSION << '\n';
+}
+
+static void print_help(const std::string_view& progname) {
+    std::cerr << PACKAGE << ". A utility to compare karman state files.\n\n";
+    std::cerr << "Usage: " << progname << " [OPTIONS] FILE1 FILE2\n\n";
+    std::cerr << "  -h, --help            Print a summary of the options\n";
+    std::cerr << "  -V, --version         Print the version number\n";
+    std::cerr << "  -e, --epsilon=EPSILON Set epsilon: the maximum allowed difference\n";
+    std::cerr << "  -m, --mode=MODE       Set the mode, may be one of 'diff', 'plot-u',\n";
+    std::cerr << "                        'plot-v', 'plot-p', or 'plot-flags'. The plot\n";
+    std::cerr << "                        modes produce output ready to be used by the\n";
+    std::cerr << "                        'splot matrix' command in gnuplot.\n";
+}
+
+int main(int argc, char** argv) {
     float epsilon = 1e-7;
     int mode = MODE_DIFF;
     int show_help = 0, show_usage = 0, show_version = 0;
-    progname = argv[0];
+    const std::string progname = argv[0];
 
-    int optc;
-    while ((optc = getopt_long(argc, argv, GETOPTS, long_opts, nullptr)) != -1) {
-        switch (optc) {
+    while (true) {
+        const auto option_char = getopt_long(argc, argv, GETOPTS, long_opts.cbegin(), nullptr);
+        if (option_char == -1) {
+            break;
+        }
+
+        switch (option_char) {
             case 'h':
                 show_help = 1;
                 break;
@@ -54,21 +67,21 @@ int main(int argc, char** argv) {
                 show_version = 1;
                 break;
             case 'e':
-                epsilon = atof(optarg);
+                epsilon = std::stof(optarg);
                 break;
             case 'm':
-                if (strcasecmp(optarg, "diff") == 0) {
+                if (strncasecmp(optarg, "diff", 4) == 0) {
                     mode = MODE_DIFF;
-                } else if (strcasecmp(optarg, "plot-u") == 0) {
+                } else if (strncasecmp(optarg, "plot-u", 6) == 0) {
                     mode = MODE_OUTPUT_U;
-                } else if (strcasecmp(optarg, "plot-v") == 0) {
+                } else if (strncasecmp(optarg, "plot-v", 6) == 0) {
                     mode = MODE_OUTPUT_V;
-                } else if (strcasecmp(optarg, "plot-p") == 0) {
+                } else if (strncasecmp(optarg, "plot-p", 6) == 0) {
                     mode = MODE_OUTPUT_P;
-                } else if (strcasecmp(optarg, "plot-flags") == 0) {
+                } else if (strncasecmp(optarg, "plot-flags", 10) == 0) {
                     mode = MODE_OUTPUT_FLAGS;
                 } else {
-                    fprintf(stderr, "%s: Invalid mode '%s'\n", progname, optarg);
+                    std::cerr << progname << ": Invalid mode '" << optarg << "'\n";
                     show_usage = 1;
                 }
                 break;
@@ -85,134 +98,120 @@ int main(int argc, char** argv) {
     }
 
     if (show_help) {
-        print_help();
+        print_help(progname);
         return 0;
     }
 
     if (show_usage || optind != (argc - 2)) {
-        print_usage();
+        print_usage(progname);
         return 1;
     }
 
 
-    if ((f1 = fopen(argv[optind], "rb")) == nullptr) {
-        fprintf(stderr, "Could not open '%s': %s\n", argv[optind],
-                strerror(errno));
-        return 1;
-    }
-    if ((f2 = fopen(argv[optind + 1], "rb")) == nullptr) {
-        fprintf(stderr, "Could not open '%s': %s\n", argv[optind + 1],
-                strerror(errno));
+    std::ifstream f1(argv[optind], std::ios::binary);
+    if (!f1.is_open()) {
+        std::cerr << "Could not open '" << argv[optind] << "': " << std::strerror(errno) << "\n";
         return 1;
     }
 
-    fread(&imax, sizeof(int), 1, f1);
-    fread(&jmax, sizeof(int), 1, f1);
-    fread(&i, sizeof(int), 1, f2);
-    fread(&j, sizeof(int), 1, f2);
-    if (i != imax || j != jmax) {
-        printf("Number of cells differ! (%dx%d vs %dx%d)\n", imax, jmax, i, j);
+    std::ifstream f2(argv[optind + 1], std::ios::binary);
+    if (!f2.is_open()) {
+        std::cerr << "Could not open '" << argv[optind + 1] << "': " << std::strerror(errno) << "\n";
         return 1;
     }
 
-    float xlength1, ylength1, xlength2, ylength2;
-    fread(&xlength1, sizeof(float), 1, f1);
-    fread(&ylength1, sizeof(float), 1, f1);
-    fread(&xlength2, sizeof(float), 1, f2);
-    fread(&ylength2, sizeof(float), 1, f2);
-    if (xlength1 != xlength2 || ylength1 != ylength2) {
-        printf("Image domain dimensions differ! (%gx%g vs %gx%g)\n",
-               xlength1, ylength1, xlength2, ylength2);
+    int imax, jmax, ii, jj;
+
+    f1.read(reinterpret_cast<char*>(&imax), sizeof(int));
+    f1.read(reinterpret_cast<char*>(&jmax), sizeof(int));
+    f2.read(reinterpret_cast<char*>(&ii), sizeof(int));
+    f2.read(reinterpret_cast<char*>(&jj), sizeof(int));
+
+    if (ii != imax || jj != jmax) {
+        std::cout << "Number of cells differ! (" << imax << "x" << jmax << " vs " << ii << "x" << jj << ")\n";
         return 1;
     }
 
-    u1 = malloc(sizeof(float) * (jmax + 2));
-    u2 = malloc(sizeof(float) * (jmax + 2));
-    v1 = malloc(sizeof(float) * (jmax + 2));
-    v2 = malloc(sizeof(float) * (jmax + 2));
-    p1 = malloc(sizeof(float) * (jmax + 2));
-    p2 = malloc(sizeof(float) * (jmax + 2));
-    flags1 = malloc(jmax + 2);
-    flags2 = malloc(jmax + 2);
-    if (!u1 || !u2 || !v1 || !v2 || !p1 || !p2 || !flags1 || !flags2) {
-        fprintf(stderr, "Couldn't allocate enough memory.\n");
+    float x_length1, y_length1, x_length2, y_length2;
+
+    f1.read(reinterpret_cast<char*>(&x_length1), sizeof(float));
+    f1.read(reinterpret_cast<char*>(&y_length1), sizeof(float));
+    f2.read(reinterpret_cast<char*>(&x_length2), sizeof(float));
+    f2.read(reinterpret_cast<char*>(&y_length2), sizeof(float));
+
+    if (x_length1 != x_length2 || y_length1 != y_length2) {
+        std::cout << "Image domain dimensions differ! ("
+                  << std::setprecision(6)
+                  << x_length1 << "x"
+                  << y_length1 << " vs "
+                  << x_length2 << "x"
+                  << y_length2 << ")\n";
         return 1;
     }
+
+    const auto _jmax_plus_2 = jmax + 2;
+
+    std::vector<float> u1(_jmax_plus_2), v1(_jmax_plus_2), p1(_jmax_plus_2);
+    std::vector<char> flags1(_jmax_plus_2);
+
+    std::vector<float> u2(_jmax_plus_2), v2(_jmax_plus_2), p2(_jmax_plus_2);
+    std::vector<char> flags2(_jmax_plus_2);
 
     int diff_found = 0;
-    for (i = 0; i < imax + 2 && !diff_found; i++) {
-        fread(u1, sizeof(float), jmax + 2, f1);
-        fread(v1, sizeof(float), jmax + 2, f1);
-        fread(p1, sizeof(float), jmax + 2, f1);
-        fread(flags1, 1, jmax + 2, f1);
-        fread(u2, sizeof(float), jmax + 2, f2);
-        fread(v2, sizeof(float), jmax + 2, f2);
-        fread(p2, sizeof(float), jmax + 2, f2);
-        fread(flags2, 1, jmax + 2, f2);
-        for (j = 0; j < jmax + 2 && !diff_found; j++) {
-            float du, dv, dp;
-            int dflags;
-            du = u1[j] - u2[j];
-            dv = v1[j] - v2[j];
-            dp = p1[j] - p2[j];
-            dflags = flags1[j] - flags2[j];
+    const auto _float_jmax_size = static_cast<std::streamsize>(_jmax_plus_2 * sizeof(float));
+    const auto _char_jmax_size = static_cast<std::streamsize>(_jmax_plus_2 * sizeof(char));
+    for (int i = 0; i < imax + 2 && !diff_found; i++) {
+        f1.read(reinterpret_cast<char*>(u1.data()), _float_jmax_size);
+        f1.read(reinterpret_cast<char*>(v1.data()), _float_jmax_size);
+        f1.read(reinterpret_cast<char*>(p1.data()), _float_jmax_size);
+        f1.read(reinterpret_cast<char*>(flags1.data()), _char_jmax_size);
+
+        f2.read(reinterpret_cast<char*>(u2.data()), _float_jmax_size);
+        f2.read(reinterpret_cast<char*>(v2.data()), _float_jmax_size);
+        f2.read(reinterpret_cast<char*>(p2.data()), _float_jmax_size);
+        f2.read(reinterpret_cast<char*>(flags2.data()), _char_jmax_size);
+
+        for (int j = 0; j < _jmax_plus_2 && !diff_found; j++) {
+            const auto du = u1[j] - u2[j];
+            const auto dv = v1[j] - v2[j];
+            const auto dp = p1[j] - p2[j];
+            const auto d_flags = flags1[j] - flags2[j];
+
             switch (mode) {
                 case MODE_DIFF:
-                    if (fpclassify(du) == FP_NAN ||
-                        fpclassify(dv) == FP_NAN ||
-                        fpclassify(dp) == FP_NAN ||
-                        fpclassify(du) == FP_INFINITE ||
-                        fpclassify(dv) == FP_INFINITE ||
-                        fpclassify(dp) == FP_INFINITE) {
+                    if (std::isnan(du) || std::isnan(dv) || std::isnan(dp) ||
+                        std::isinf(du) || std::isinf(dv) || std::isinf(dp)) {
                         diff_found = 1;
                     }
-                    if (fabs(du) > epsilon || fabs(dv) > epsilon ||
-                        fabs(dp) > epsilon || fabs(dflags) > epsilon) {
+                    if (std::fabs(du) > epsilon || std::fabs(dv) > epsilon ||
+                        std::fabs(dp) > epsilon || std::fabs(d_flags) > epsilon) {
                         diff_found = 1;
                     }
                     break;
                 case MODE_OUTPUT_U:
-                    printf("%g%c", du, (j == jmax + 1) ? '\n' : ' ');
+                    std::cout << du << ((j == jmax + 1) ? '\n' : ' ');
                     break;
                 case MODE_OUTPUT_V:
-                    printf("%g%c", dv, (j == jmax + 1) ? '\n' : ' ');
+                    std::cout << dv << ((j == jmax + 1) ? '\n' : ' ');
                     break;
                 case MODE_OUTPUT_P:
-                    printf("%g%c", dp, (j == jmax + 1) ? '\n' : ' ');
+                    std::cout << dp << ((j == jmax + 1) ? '\n' : ' ');
                     break;
                 case MODE_OUTPUT_FLAGS:
-                    printf("%d%c", dflags, (j == jmax + 1) ? '\n' : ' ');
+                    std::cout << static_cast<int>(d_flags) << ((j == jmax + 1) ? '\n' : ' ');
                     break;
             }
         }
     }
+
     if (diff_found) {
-        printf("Files differ.\n");
+        std::cout << "Files differ.\n";
         return 1;
     }
+
     if (mode == MODE_DIFF) {
-        printf("Files identical.\n");
+        std::cout << "Files identical.\n";
     }
+
     return 0;
 }
-
-static void print_usage(void) {
-    fprintf(stderr, "Try '%s --help' for more information.\n", progname);
-}
-
-static void print_version(void) {
-    fprintf(stderr, "%s %s\n", PACKAGE, VERSION);
-}
-
-static void print_help(void) {
-    fprintf(stderr, "%s. A utility to compare karman state files.\n\n",PACKAGE);
-    fprintf(stderr, "Usage %s [OPTIONS] FILE1 FILE2\n\n", progname);
-    fprintf(stderr, "  -h, --help            Print a summary of the options\n");
-    fprintf(stderr, "  -V, --version         Print the version number\n");
-    fprintf(stderr, "  -e, --epsilon=EPSILON Set epsilon: the maximum allowed difference\n");
-    fprintf(stderr, "  -m, --mode=MODE       Set the mode, may be one of 'diff', 'plot-u',\n");
-    fprintf(stderr, "                        'plot-v', 'plot-p', or 'plot-flags'. The plot\n");
-    fprintf(stderr, "                        modes produce output ready to be used by the\n");
-    fprintf(stderr, "                        'splot matrix' command in gnuplot.\n");
-}
-
