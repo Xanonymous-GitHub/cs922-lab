@@ -17,7 +17,7 @@ CXXFLAGS := $(CXXFLAGS_OPT) $(CXXFLAGS_OTHER) $(CPPFLAGS)
 
 # add openmp flags (comment out for serial build)
 CXXFLAGS += $(CXXFLAGS_OPENMP)
-LDFLAGS += $(CXXFLAGS_OPENMP)
+LDFLAGS += $(CXXFLAGS_OPENMP) -lm
 
 HDRS := $(wildcard $(SRCDIR)/*.h)
 BINARIES := $(BUILDDIR)/bin2ppm $(BUILDDIR)/diffbin $(BUILDDIR)/pingpong $(BUILDDIR)/colcopy $(BUILDDIR)/karman
