@@ -236,6 +236,25 @@ int main(int argc, char* argv[]) {
 
     ifluid = (imax * jmax) - ibound;
 
+    int imax_jmax = (imax + 1) * (jmax + 1);
+    float _pre_calculated_eps_Es[imax_jmax];
+    float _pre_calculated_eps_Ws[imax_jmax];
+    float _pre_calculated_eps_Ns[imax_jmax];
+    float _pre_calculated_eps_Ss[imax_jmax];
+
+    if (ifluid > 0) {
+        #pragma omp parallel for private(i, j) collapse(2)
+        for (i = 1; i <= imax; i++) {
+            for (j = 1; j <= jmax; j++) {
+                int pos = i * jmax + j;
+                _pre_calculated_eps_Es[pos] = flag[i + 1][j] & C_F ? 1 : 0;
+                _pre_calculated_eps_Ws[pos] = flag[i - 1][j] & C_F ? 1 : 0;
+                _pre_calculated_eps_Ns[pos] = flag[i][j + 1] & C_F ? 1 : 0;
+                _pre_calculated_eps_Ss[pos] = flag[i][j - 1] & C_F ? 1 : 0;
+            }
+        }
+    }
+
     /* Main loop */
     for (t = 0.0; t < t_end; t += del_t, iters++) {
         // 3: set_timestep_interval
@@ -290,7 +309,11 @@ int main(int argc, char* argv[]) {
             itersor = poisson(
                 p, rhs, flag, imax, 
                 jmax, delx, dely, eps,
-                itermax, omega, &res, ifluid
+                itermax, omega, &res, ifluid,
+                _pre_calculated_eps_Es,
+                _pre_calculated_eps_Ws,
+                _pre_calculated_eps_Ns,
+                _pre_calculated_eps_Ss
             );
             #if SHOULD_RECORD_TIME
                 if (verbose > 1) {

@@ -39,7 +39,11 @@ int poisson(
     int itermax,
     float omega,
     float* res,
-    int ifull
+    int ifull,
+    float* pre_calculated_eps_Es,
+    float* pre_calculated_eps_Ws,
+    float* pre_calculated_eps_Ns,
+    float* pre_calculated_eps_Ss
 );
 
 void update_velocity(
