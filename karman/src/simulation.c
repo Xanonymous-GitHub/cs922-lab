@@ -184,7 +184,6 @@ int poisson(
     float pre_calculated_beta_mods[imax + 1][jmax + 1]
 ) {
     int i = 1, j = 1, iter = 0;
-    float add;
     float p0 = 0.0;
 
     /* Calculate sum of squares */
@@ -235,13 +234,13 @@ int poisson(
                 if (flag[i][j] & C_F) {
                     /* only fluid cells */
 
-                    int pos = i * jmax + j;
-                    float _eps_E = pre_calculated_eps_Es[pos];
-                    float _eps_W = pre_calculated_eps_Ws[pos];
-                    float _eps_N = pre_calculated_eps_Ns[pos];
-                    float _eps_S = pre_calculated_eps_Ss[pos];
+                    const int pos = i * jmax + j;
+                    const float _eps_E = pre_calculated_eps_Es[pos];
+                    const float _eps_W = pre_calculated_eps_Ws[pos];
+                    const float _eps_N = pre_calculated_eps_Ns[pos];
+                    const float _eps_S = pre_calculated_eps_Ss[pos];
 
-                    add = (_eps_E * (p[i + 1][j] - p[i][j]) -
+                    const float add = (_eps_E * (p[i + 1][j] - p[i][j]) -
                            _eps_W * (p[i][j] - p[i - 1][j])) * rdx2 +
                           (_eps_N * (p[i][j + 1] - p[i][j]) -
                            _eps_S * (p[i][j] - p[i][j - 1])) * rdy2 - rhs[i][j];

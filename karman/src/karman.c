@@ -69,8 +69,8 @@ static struct option long_opts[] = {
 
 int main(int argc, char* argv[]) {
     int verbose = 1;          /* Verbosity level */
-    float xlength = 22.0;     /* Width of simulated domain */
-    float ylength = 4.1;      /* Height of simulated domain */
+    const float xlength = 22.0;     /* Width of simulated domain */
+    const float ylength = 4.1;      /* Height of simulated domain */
     int imax = 660;           /* Number of cells horizontally */
     int jmax = 120;           /* Number of cells vertically */
 
@@ -79,17 +79,17 @@ int main(int argc, char* argv[]) {
 
     float t_end = 2.1;        /* Simulation runtime */
     float del_t = 0.003;      /* Duration of each timestep */
-    float tau = 0.5;          /* Safety factor for timestep control */
+    const float tau = 0.5;          /* Safety factor for timestep control */
 
-    int itermax = 100;        /* Maximum number of iterations in SOR */
-    float eps = 0.001;        /* Stopping error threshold for SOR */
-    float omega = 1.7;        /* Relaxation parameter for SOR */
-    float gamma = 0.9;        /* Upwind differencing factor in PDE
+    const int itermax = 100;        /* Maximum number of iterations in SOR */
+    const float eps = 0.001;        /* Stopping error threshold for SOR */
+    const float omega = 1.7;        /* Relaxation parameter for SOR */
+    const float gamma = 0.9;        /* Upwind differencing factor in PDE
                                  discretisation */
 
-    float Re = 150.0;         /* Reynolds number */
-    float ui = 1.0;           /* Initial X velocity */
-    float vi = 0.0;           /* Initial Y velocity */
+    const float Re = 150.0;         /* Reynolds number */
+    const float ui = 1.0;           /* Initial X velocity */
+    const float vi = 0.0;           /* Initial Y velocity */
 
     float t, delx, dely;
     int i, j, itersor = 0, ifluid = 0, ibound = 0;
