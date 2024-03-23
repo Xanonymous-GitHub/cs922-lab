@@ -324,7 +324,7 @@ int main(int argc, char* argv[]) {
             #endif
             itersor = poisson(
                 p, rhs, flag, imax, 
-                jmax, delx, dely, eps,
+                jmax, eps,
                 itermax, omega, &res, ifluid,
                 _pre_calculated_eps_Es,
                 _pre_calculated_eps_Ws,

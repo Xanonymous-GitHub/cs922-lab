@@ -33,8 +33,6 @@ int poisson(
     register char** flag,
     int imax,
     int jmax,
-    register float delx,
-    register float dely,
     register float eps,
     register int itermax,
     register float omega,
