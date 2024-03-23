@@ -57,15 +57,15 @@ int main(int argc, char** argv) {
                 epsilon = atof(optarg);
                 break;
             case 'm':
-                if (strcasecmp(optarg, "diff") == 0) {
+                if (strncmp(optarg, "diff", 4) == 0) {
                     mode = MODE_DIFF;
-                } else if (strcasecmp(optarg, "plot-u") == 0) {
+                } else if (strncmp(optarg, "plot-u", 6) == 0) {
                     mode = MODE_OUTPUT_U;
-                } else if (strcasecmp(optarg, "plot-v") == 0) {
+                } else if (strncmp(optarg, "plot-v", 6) == 0) {
                     mode = MODE_OUTPUT_V;
-                } else if (strcasecmp(optarg, "plot-p") == 0) {
+                } else if (strncmp(optarg, "plot-p", 6) == 0) {
                     mode = MODE_OUTPUT_P;
-                } else if (strcasecmp(optarg, "plot-flags") == 0) {
+                } else if (strncmp(optarg, "plot-flags", 10) == 0) {
                     mode = MODE_OUTPUT_FLAGS;
                 } else {
                     fprintf(stderr, "%s: Invalid mode '%s'\n", progname, optarg);
@@ -167,7 +167,7 @@ int main(int argc, char** argv) {
                         diff_found = 1;
                     }
                     if (fabs(du) > epsilon || fabs(dv) > epsilon ||
-                        fabs(dp) > epsilon || fabs(dflags) > epsilon) {
+                        fabs(dp) > epsilon || fabs((double)(dflags)) > epsilon) {
                         diff_found = 1;
                     }
                     break;
