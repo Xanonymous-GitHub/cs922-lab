@@ -161,6 +161,10 @@ int main(int argc, char* argv[]) {
     delx = xlength / imax;
     dely = ylength / jmax;
 
+    const float rdx2 = 1.0 / (delx * delx);
+    const float rdy2 = 1.0 / (dely * dely);
+    const float beta_2 = -omega / (2.0 * (rdx2 + rdy2));
+
     /* Allocate arrays */
     u = alloc_floatmatrix(imax + 2, jmax + 2);
     v = alloc_floatmatrix(imax + 2, jmax + 2);
@@ -242,6 +246,7 @@ int main(int argc, char* argv[]) {
     float _pre_calculated_eps_Ns[imax_jmax];
     float _pre_calculated_eps_Ss[imax_jmax];
 
+
     if (ifluid > 0) {
         #pragma omp parallel for private(i, j) collapse(2)
         for (i = 1; i <= imax; i++) {
@@ -252,6 +257,19 @@ int main(int argc, char* argv[]) {
                 _pre_calculated_eps_Ns[pos] = flag[i][j + 1] & C_F ? 1 : 0;
                 _pre_calculated_eps_Ss[pos] = flag[i][j - 1] & C_F ? 1 : 0;
             }
+        }
+    }
+
+    float _beta_mods[imax + 1][jmax + 1];
+
+    #pragma omp parallel for private(i, j) collapse(2)
+    for (i = 1; i <= imax; i++) {
+        for (j = 1; j <= jmax; j++) {
+            const int pos = i * jmax + j;
+            _beta_mods[i][j] = -omega / (
+                (_pre_calculated_eps_Es[pos] + _pre_calculated_eps_Ws[pos]) * rdx2 + 
+                (_pre_calculated_eps_Ns[pos] + _pre_calculated_eps_Ss[pos]) * rdy2
+            );
         }
     }
 
@@ -313,7 +331,8 @@ int main(int argc, char* argv[]) {
                 _pre_calculated_eps_Es,
                 _pre_calculated_eps_Ws,
                 _pre_calculated_eps_Ns,
-                _pre_calculated_eps_Ss
+                _pre_calculated_eps_Ss,
+                rdx2, rdy2, beta_2, _beta_mods
             );
             #if SHOULD_RECORD_TIME
                 if (verbose > 1) {

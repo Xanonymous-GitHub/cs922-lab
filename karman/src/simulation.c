@@ -122,6 +122,7 @@ void _red_black_sor(
     float** p,
     float** rhs,
     char** flag,
+    int imax,
     int jmax,
     float omega,
     float rdx2,
@@ -130,7 +131,8 @@ void _red_black_sor(
     float* pre_calculated_eps_Es,
     float* pre_calculated_eps_Ws,
     float* pre_calculated_eps_Ns,
-    float* pre_calculated_eps_Ss
+    float* pre_calculated_eps_Ss,
+    float pre_calculated_beta_mods[imax + 1][jmax + 1]
 ) {
     if (flag[i][j] == (C_F | B_NSEW)) {
         /* five point star for interior fluid cells */
@@ -148,9 +150,8 @@ void _red_black_sor(
         const float _eps_N = pre_calculated_eps_Ns[pos];
         const float _eps_S = pre_calculated_eps_Ss[pos];
 
-        const float beta_mod = -omega / ((_eps_E + _eps_W) * rdx2 + (_eps_N + _eps_S) * rdy2);
         p[i][j] = (1. - omega) * p[i][j] -
-                    beta_mod * (
+                    pre_calculated_beta_mods[i][j] * (
                         (_eps_E * p[i + 1][j] + _eps_W * p[i - 1][j]) * rdx2
                         + (_eps_N * p[i][j + 1] + _eps_S * p[i][j - 1]) * rdy2
                         - rhs[i][j]
@@ -176,15 +177,15 @@ int poisson(
     float* pre_calculated_eps_Es,
     float* pre_calculated_eps_Ws,
     float* pre_calculated_eps_Ns,
-    float* pre_calculated_eps_Ss
+    float* pre_calculated_eps_Ss,
+    float rdx2,
+    float rdy2,
+    float beta_2,
+    float pre_calculated_beta_mods[imax + 1][jmax + 1]
 ) {
     int i = 1, j = 1, iter = 0;
     float add;
     float p0 = 0.0;
-
-    float rdx2 = 1.0 / (delx * delx);
-    float rdy2 = 1.0 / (dely * dely);
-    float beta_2 = -omega / (2.0 * (rdx2 + rdy2));
 
     /* Calculate sum of squares */
     for (i = 1; i <= imax; i++) {
@@ -202,12 +203,13 @@ int poisson(
         for (i = 1; i <= imax; i++) {
             for (j = 2 - (i % 2); j <= jmax; j += 2) {
                 _red_black_sor(
-                    i, j, p, rhs, flag, jmax, omega, 
+                    i, j, p, rhs, flag, imax, jmax, omega, 
                     rdx2, rdy2, beta_2, 
                     pre_calculated_eps_Es, 
                     pre_calculated_eps_Ws, 
                     pre_calculated_eps_Ns, 
-                    pre_calculated_eps_Ss
+                    pre_calculated_eps_Ss,
+                    pre_calculated_beta_mods
                 );
             }
         }
@@ -215,12 +217,13 @@ int poisson(
         for (i = 1; i <= imax; i += 1) {
             for (j = 1 + (i % 2); j <= jmax; j += 2) {
                 _red_black_sor(
-                    i, j, p, rhs, flag, jmax, omega, 
+                    i, j, p, rhs, flag, imax, jmax, omega, 
                     rdx2, rdy2, beta_2, 
                     pre_calculated_eps_Es, 
                     pre_calculated_eps_Ws, 
                     pre_calculated_eps_Ns, 
-                    pre_calculated_eps_Ss
+                    pre_calculated_eps_Ss,
+                    pre_calculated_beta_mods
                 );
             }
         }

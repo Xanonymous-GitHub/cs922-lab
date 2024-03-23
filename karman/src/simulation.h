@@ -43,7 +43,11 @@ int poisson(
     float* pre_calculated_eps_Es,
     float* pre_calculated_eps_Ws,
     float* pre_calculated_eps_Ns,
-    float* pre_calculated_eps_Ss
+    float* pre_calculated_eps_Ss,
+    float rdx2,
+    float rdy2,
+    float beta_2,
+    float pre_calculated_beta_mods[imax + 1][jmax + 1]
 );
 
 void update_velocity(
