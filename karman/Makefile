@@ -8,7 +8,7 @@ CXXLIBS := $(shell bash generate_module_paths.bash 'lib' | sed 's/^/-L/')
 # g++ flags:
 CXX := mpicc
 CXXFLAGS_DEBUG := -g -DDEBUG
-CXXFLAGS_OPT := -O3 -finline-functions -m64 -funroll-loops
+CXXFLAGS_OPT := -O3 -finline-functions -m64 -funroll-loops #-march=native # -ffast-math
 CXXFLAGS_OPENMP := -fopenmp
 CXXFLAGS_STANDARD := -std=c11
 CXXFLAGS_OTHER := -Wall -Wextra -Wpedantic
