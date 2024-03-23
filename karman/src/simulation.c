@@ -116,6 +116,48 @@ void compute_rhs(
     }
 }
 
+void _red_black_sor(
+    int i,
+    int j,
+    float** p,
+    float** rhs,
+    char** flag,
+    int jmax,
+    float omega,
+    float rdx2,
+    float rdy2,
+    float beta_2,
+    float* pre_calculated_eps_Es,
+    float* pre_calculated_eps_Ws,
+    float* pre_calculated_eps_Ns,
+    float* pre_calculated_eps_Ss
+) {
+    if (flag[i][j] == (C_F | B_NSEW)) {
+        /* five point star for interior fluid cells */
+        p[i][j] = (1. - omega) * p[i][j] -
+                    beta_2 * (
+                        (p[i + 1][j] + p[i - 1][j]) * rdx2
+                        + (p[i][j + 1] + p[i][j - 1]) * rdy2
+                        - rhs[i][j]
+                    );
+    } else if (flag[i][j] & C_F) {
+        /* modified star near boundary */
+        int pos = i * jmax + j;
+        float _eps_E = pre_calculated_eps_Es[pos];
+        float _eps_W = pre_calculated_eps_Ws[pos];
+        float _eps_N = pre_calculated_eps_Ns[pos];
+        float _eps_S = pre_calculated_eps_Ss[pos];
+
+        float beta_mod = -omega / ((_eps_E + _eps_W) * rdx2 + (_eps_N + _eps_S) * rdy2);
+        p[i][j] = (1. - omega) * p[i][j] -
+                    beta_mod * (
+                        (_eps_E * p[i + 1][j] + _eps_W * p[i - 1][j]) * rdx2
+                        + (_eps_N * p[i][j + 1] + _eps_S * p[i][j - 1]) * rdy2
+                        - rhs[i][j]
+                    );
+    }
+}
+
 
 /* Red/Black SOR to solve the poisson equation */
 int poisson(
@@ -137,10 +179,8 @@ int poisson(
     float* pre_calculated_eps_Ss
 ) {
     int i = 1, j = 1, iter = 0;
-    float add, beta_mod;
+    float add;
     float p0 = 0.0;
-
-    int rb; /* Red-black value. */
 
     float rdx2 = 1.0 / (delx * delx);
     float rdy2 = 1.0 / (dely * dely);
@@ -156,42 +196,34 @@ int poisson(
     p0 = sqrt(p0 / ifull);
     if (p0 < 0.0001) { p0 = 1.0; }
 
-    float _one_minus_omega = 1. - omega;
-
     /* Red/Black SOR-iteration */
     for (iter = 0; iter < itermax; iter++) {
-        for (rb = 0; rb <= 1; rb++) {
-            for (i = 1; i <= imax; i++) {
-                for (j = 1; j <= jmax; j++) {
-                    if ((i + j) % 2 != rb) { continue; }
 
-                    if (flag[i][j] == (C_F | B_NSEW)) {
-                        /* five point star for interior fluid cells */
-                        p[i][j] = _one_minus_omega * p[i][j] -
-                                  beta_2 * (
-                                      (p[i + 1][j] + p[i - 1][j]) * rdx2
-                                      + (p[i][j + 1] + p[i][j - 1]) * rdy2
-                                      - rhs[i][j]
-                                  );
-                    } else if (flag[i][j] & C_F) {
-                        /* modified star near boundary */
-                        int pos = i * jmax + j;
-                        float _eps_E = pre_calculated_eps_Es[pos];
-                        float _eps_W = pre_calculated_eps_Ws[pos];
-                        float _eps_N = pre_calculated_eps_Ns[pos];
-                        float _eps_S = pre_calculated_eps_Ss[pos];
+        for (i = 1; i <= imax; i++) {
+            for (j = 2 - (i % 2); j <= jmax; j += 2) {
+                _red_black_sor(
+                    i, j, p, rhs, flag, jmax, omega, 
+                    rdx2, rdy2, beta_2, 
+                    pre_calculated_eps_Es, 
+                    pre_calculated_eps_Ws, 
+                    pre_calculated_eps_Ns, 
+                    pre_calculated_eps_Ss
+                );
+            }
+        }
 
-                        beta_mod = -omega / ((_eps_E + _eps_W) * rdx2 + (_eps_N + _eps_S) * rdy2);
-                        p[i][j] = (1. - omega) * p[i][j] -
-                                  beta_mod * (
-                                      (_eps_E * p[i + 1][j] + _eps_W * p[i - 1][j]) * rdx2
-                                      + (_eps_N * p[i][j + 1] + _eps_S * p[i][j - 1]) * rdy2
-                                      - rhs[i][j]
-                                  );
-                    }
-                } /* end of j */
-            } /* end of i */
-        } /* end of rb */
+        for (i = 1; i <= imax; i += 1) {
+            for (j = 1 + (i % 2); j <= jmax; j += 2) {
+                _red_black_sor(
+                    i, j, p, rhs, flag, jmax, omega, 
+                    rdx2, rdy2, beta_2, 
+                    pre_calculated_eps_Es, 
+                    pre_calculated_eps_Ws, 
+                    pre_calculated_eps_Ns, 
+                    pre_calculated_eps_Ss
+                );
+            }
+        }
 
         /* Partial computation of residual */
         *res = 0.0;
