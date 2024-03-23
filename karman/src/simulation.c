@@ -128,10 +128,10 @@ void _red_black_sor(
     float rdx2,
     float rdy2,
     float beta_2,
-    float* pre_calculated_eps_Es,
-    float* pre_calculated_eps_Ws,
-    float* pre_calculated_eps_Ns,
-    float* pre_calculated_eps_Ss,
+    float pre_calculated_eps_Es[imax + 1][jmax + 1],
+    float pre_calculated_eps_Ws[imax + 1][jmax + 1],
+    float pre_calculated_eps_Ns[imax + 1][jmax + 1],
+    float pre_calculated_eps_Ss[imax + 1][jmax + 1],
     float pre_calculated_beta_mods[imax + 1][jmax + 1]
 ) {
     if (flag[i][j] == (C_F | B_NSEW)) {
@@ -144,11 +144,10 @@ void _red_black_sor(
                     );
     } else if (flag[i][j] & C_F) {
         /* modified star near boundary */
-        const int pos = i * jmax + j;
-        const float _eps_E = pre_calculated_eps_Es[pos];
-        const float _eps_W = pre_calculated_eps_Ws[pos];
-        const float _eps_N = pre_calculated_eps_Ns[pos];
-        const float _eps_S = pre_calculated_eps_Ss[pos];
+        const float _eps_E = pre_calculated_eps_Es[i][j];
+        const float _eps_W = pre_calculated_eps_Ws[i][j];
+        const float _eps_N = pre_calculated_eps_Ns[i][j];
+        const float _eps_S = pre_calculated_eps_Ss[i][j];
 
         p[i][j] = (1. - omega) * p[i][j] -
                     pre_calculated_beta_mods[i][j] * (
@@ -174,10 +173,10 @@ int poisson(
     float omega,
     float* res,
     int ifull,
-    float* pre_calculated_eps_Es,
-    float* pre_calculated_eps_Ws,
-    float* pre_calculated_eps_Ns,
-    float* pre_calculated_eps_Ss,
+    float pre_calculated_eps_Es[imax + 1][jmax + 1],
+    float pre_calculated_eps_Ws[imax + 1][jmax + 1],
+    float pre_calculated_eps_Ns[imax + 1][jmax + 1],
+    float pre_calculated_eps_Ss[imax + 1][jmax + 1],
     float rdx2,
     float rdy2,
     float beta_2,
@@ -233,12 +232,10 @@ int poisson(
             for (j = 1; j <= jmax; j++) {
                 if (flag[i][j] & C_F) {
                     /* only fluid cells */
-
-                    const int pos = i * jmax + j;
-                    const float _eps_E = pre_calculated_eps_Es[pos];
-                    const float _eps_W = pre_calculated_eps_Ws[pos];
-                    const float _eps_N = pre_calculated_eps_Ns[pos];
-                    const float _eps_S = pre_calculated_eps_Ss[pos];
+                    const float _eps_E = pre_calculated_eps_Es[i][j];
+                    const float _eps_W = pre_calculated_eps_Ws[i][j];
+                    const float _eps_N = pre_calculated_eps_Ns[i][j];
+                    const float _eps_S = pre_calculated_eps_Ss[i][j];
 
                     const float add = (_eps_E * (p[i + 1][j] - p[i][j]) -
                            _eps_W * (p[i][j] - p[i - 1][j])) * rdx2 +

@@ -240,22 +240,20 @@ int main(int argc, char* argv[]) {
 
     ifluid = (imax * jmax) - ibound;
 
-    int imax_jmax = (imax + 1) * (jmax + 1);
-    float _pre_calculated_eps_Es[imax_jmax];
-    float _pre_calculated_eps_Ws[imax_jmax];
-    float _pre_calculated_eps_Ns[imax_jmax];
-    float _pre_calculated_eps_Ss[imax_jmax];
+    float _pre_calculated_eps_Es[imax + 1][jmax + 1];
+    float _pre_calculated_eps_Ws[imax + 1][jmax + 1];
+    float _pre_calculated_eps_Ns[imax + 1][jmax + 1];
+    float _pre_calculated_eps_Ss[imax + 1][jmax + 1];
 
 
     if (ifluid > 0) {
         #pragma omp parallel for private(i, j) collapse(2)
         for (i = 1; i <= imax; i++) {
             for (j = 1; j <= jmax; j++) {
-                int pos = i * jmax + j;
-                _pre_calculated_eps_Es[pos] = flag[i + 1][j] & C_F ? 1 : 0;
-                _pre_calculated_eps_Ws[pos] = flag[i - 1][j] & C_F ? 1 : 0;
-                _pre_calculated_eps_Ns[pos] = flag[i][j + 1] & C_F ? 1 : 0;
-                _pre_calculated_eps_Ss[pos] = flag[i][j - 1] & C_F ? 1 : 0;
+                _pre_calculated_eps_Es[i][j] = flag[i + 1][j] & C_F ? 1 : 0;
+                _pre_calculated_eps_Ws[i][j] = flag[i - 1][j] & C_F ? 1 : 0;
+                _pre_calculated_eps_Ns[i][j] = flag[i][j + 1] & C_F ? 1 : 0;
+                _pre_calculated_eps_Ss[i][j] = flag[i][j - 1] & C_F ? 1 : 0;
             }
         }
     }
@@ -267,8 +265,8 @@ int main(int argc, char* argv[]) {
         for (j = 1; j <= jmax; j++) {
             const int pos = i * jmax + j;
             _beta_mods[i][j] = -omega / (
-                (_pre_calculated_eps_Es[pos] + _pre_calculated_eps_Ws[pos]) * rdx2 + 
-                (_pre_calculated_eps_Ns[pos] + _pre_calculated_eps_Ss[pos]) * rdy2
+                (_pre_calculated_eps_Es[i][j] + _pre_calculated_eps_Ws[i][j]) * rdx2 + 
+                (_pre_calculated_eps_Ns[i][j] + _pre_calculated_eps_Ss[i][j]) * rdy2
             );
         }
     }
