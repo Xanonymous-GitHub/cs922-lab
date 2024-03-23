@@ -142,13 +142,13 @@ void _red_black_sor(
                     );
     } else if (flag[i][j] & C_F) {
         /* modified star near boundary */
-        int pos = i * jmax + j;
-        float _eps_E = pre_calculated_eps_Es[pos];
-        float _eps_W = pre_calculated_eps_Ws[pos];
-        float _eps_N = pre_calculated_eps_Ns[pos];
-        float _eps_S = pre_calculated_eps_Ss[pos];
+        const int pos = i * jmax + j;
+        const float _eps_E = pre_calculated_eps_Es[pos];
+        const float _eps_W = pre_calculated_eps_Ws[pos];
+        const float _eps_N = pre_calculated_eps_Ns[pos];
+        const float _eps_S = pre_calculated_eps_Ss[pos];
 
-        float beta_mod = -omega / ((_eps_E + _eps_W) * rdx2 + (_eps_N + _eps_S) * rdy2);
+        const float beta_mod = -omega / ((_eps_E + _eps_W) * rdx2 + (_eps_N + _eps_S) * rdy2);
         p[i][j] = (1. - omega) * p[i][j] -
                     beta_mod * (
                         (_eps_E * p[i + 1][j] + _eps_W * p[i - 1][j]) * rdx2
