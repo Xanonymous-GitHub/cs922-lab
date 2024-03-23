@@ -71,31 +71,32 @@ int main(int argc, char* argv[]) {
     int verbose = 1;          /* Verbosity level */
     const float xlength = 22.0;     /* Width of simulated domain */
     const float ylength = 4.1;      /* Height of simulated domain */
-    int imax = 660;           /* Number of cells horizontally */
-    int jmax = 120;           /* Number of cells vertically */
+    register int imax = 660;           /* Number of cells horizontally */
+    register int jmax = 120;           /* Number of cells vertically */
 
     char* infile;             /* Input raw initial conditions */
     char* outfile;            /* Output raw simulation results */
 
     float t_end = 2.1;        /* Simulation runtime */
     float del_t = 0.003;      /* Duration of each timestep */
-    const float tau = 0.5;          /* Safety factor for timestep control */
+    register const float tau = 0.5;          /* Safety factor for timestep control */
 
-    const int itermax = 100;        /* Maximum number of iterations in SOR */
-    const float eps = 0.001;        /* Stopping error threshold for SOR */
-    const float omega = 1.7;        /* Relaxation parameter for SOR */
-    const float gamma = 0.9;        /* Upwind differencing factor in PDE
+    register int itermax = 100;        /* Maximum number of iterations in SOR */
+    register float eps = 0.001;        /* Stopping error threshold for SOR */
+    register const float omega = 1.7;        /* Relaxation parameter for SOR */
+    register const float gamma = 0.9;        /* Upwind differencing factor in PDE
                                  discretisation */
 
-    const float Re = 150.0;         /* Reynolds number */
-    const float ui = 1.0;           /* Initial X velocity */
-    const float vi = 0.0;           /* Initial Y velocity */
+    register const float Re = 150.0;         /* Reynolds number */
+    register const float ui = 1.0;           /* Initial X velocity */
+    register const float vi = 0.0;           /* Initial Y velocity */
 
-    float t, delx, dely;
-    int i, j, itersor = 0, ifluid = 0, ibound = 0;
+    register float t, delx, dely;
+    register int i, j, itersor = 0, ifluid = 0;
+    int ibound = 0;
     float res;
-    float** u, ** v, ** p, ** rhs, ** f, ** g;
-    char** flag;
+    register float** u, ** v, ** p, ** rhs, ** f, ** g;
+    register char** flag;
     int init_case, iters = 0;
     int show_help = 0, show_usage = 0, show_version = 0;
 
@@ -161,9 +162,9 @@ int main(int argc, char* argv[]) {
     delx = xlength / imax;
     dely = ylength / jmax;
 
-    const float rdx2 = 1.0 / (delx * delx);
-    const float rdy2 = 1.0 / (dely * dely);
-    const float beta_2 = -omega / (2.0 * (rdx2 + rdy2));
+    register const float rdx2 = 1.0 / (delx * delx);
+    register const float rdy2 = 1.0 / (dely * dely);
+    register const float beta_2 = -omega / (2.0 * (rdx2 + rdy2));
 
     /* Allocate arrays */
     u = alloc_floatmatrix(imax + 2, jmax + 2);
@@ -263,7 +264,6 @@ int main(int argc, char* argv[]) {
     #pragma omp parallel for private(i, j) collapse(2)
     for (i = 1; i <= imax; i++) {
         for (j = 1; j <= jmax; j++) {
-            const int pos = i * jmax + j;
             _beta_mods[i][j] = -omega / (
                 (_pre_calculated_eps_Es[i][j] + _pre_calculated_eps_Ws[i][j]) * rdx2 + 
                 (_pre_calculated_eps_Ns[i][j] + _pre_calculated_eps_Ss[i][j]) * rdy2

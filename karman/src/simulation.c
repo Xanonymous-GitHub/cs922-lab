@@ -117,17 +117,17 @@ void compute_rhs(
 }
 
 void _red_black_sor(
-    int i,
-    int j,
-    float** p,
-    float** rhs,
-    char** flag,
+    register int i,
+    register int j,
+    register float** p,
+    register float** rhs,
+    register char** flag,
     int imax,
     int jmax,
-    float omega,
-    float rdx2,
-    float rdy2,
-    float beta_2,
+    register float omega,
+    register float rdx2,
+    register float rdy2,
+    register float beta_2,
     float pre_calculated_eps_Es[imax + 1][jmax + 1],
     float pre_calculated_eps_Ws[imax + 1][jmax + 1],
     float pre_calculated_eps_Ns[imax + 1][jmax + 1],
@@ -144,10 +144,10 @@ void _red_black_sor(
                     );
     } else if (flag[i][j] & C_F) {
         /* modified star near boundary */
-        const float _eps_E = pre_calculated_eps_Es[i][j];
-        const float _eps_W = pre_calculated_eps_Ws[i][j];
-        const float _eps_N = pre_calculated_eps_Ns[i][j];
-        const float _eps_S = pre_calculated_eps_Ss[i][j];
+        register const float _eps_E = pre_calculated_eps_Es[i][j];
+        register const float _eps_W = pre_calculated_eps_Ws[i][j];
+        register const float _eps_N = pre_calculated_eps_Ns[i][j];
+        register const float _eps_S = pre_calculated_eps_Ss[i][j];
 
         p[i][j] = (1. - omega) * p[i][j] -
                     pre_calculated_beta_mods[i][j] * (
@@ -161,29 +161,29 @@ void _red_black_sor(
 
 /* Red/Black SOR to solve the poisson equation */
 int poisson(
-    float** p,
-    float** rhs,
-    char** flag,
+    register float** p,
+    register float** rhs,
+    register char** flag,
     int imax,
     int jmax,
-    float delx,
-    float dely,
-    float eps,
-    int itermax,
-    float omega,
+    register float delx,
+    register float dely,
+    register float eps,
+    register int itermax,
+    register float omega,
     float* res,
-    int ifull,
+    register int ifull,
     float pre_calculated_eps_Es[imax + 1][jmax + 1],
     float pre_calculated_eps_Ws[imax + 1][jmax + 1],
     float pre_calculated_eps_Ns[imax + 1][jmax + 1],
     float pre_calculated_eps_Ss[imax + 1][jmax + 1],
-    float rdx2,
-    float rdy2,
-    float beta_2,
+    register float rdx2,
+    register float rdy2,
+    register float beta_2,
     float pre_calculated_beta_mods[imax + 1][jmax + 1]
 ) {
-    int i = 1, j = 1, iter = 0;
-    float p0 = 0.0;
+    register int i = 1, j = 1, iter = 0;
+    register float p0 = 0.0;
 
     /* Calculate sum of squares */
     for (i = 1; i <= imax; i++) {
@@ -199,7 +199,8 @@ int poisson(
     for (iter = 0; iter < itermax; iter++) {
 
         for (i = 1; i <= imax; i++) {
-            for (j = 2 - (i % 2); j <= jmax; j += 2) {
+            register int start_j = 2 - (i % 2);
+            for (j = start_j; j <= jmax; j += 2) {
                 _red_black_sor(
                     i, j, p, rhs, flag, imax, jmax, omega, 
                     rdx2, rdy2, beta_2, 
@@ -213,7 +214,8 @@ int poisson(
         }
 
         for (i = 1; i <= imax; i += 1) {
-            for (j = 1 + (i % 2); j <= jmax; j += 2) {
+            register int start_j = 1 + (i % 2);
+            for (j = start_j; j <= jmax; j += 2) {
                 _red_black_sor(
                     i, j, p, rhs, flag, imax, jmax, omega, 
                     rdx2, rdy2, beta_2, 
@@ -227,25 +229,25 @@ int poisson(
         }
 
         /* Partial computation of residual */
-        *res = 0.0;
+        register float local_res = 0.0;
         for (i = 1; i <= imax; i++) {
             for (j = 1; j <= jmax; j++) {
                 if (flag[i][j] & C_F) {
                     /* only fluid cells */
-                    const float _eps_E = pre_calculated_eps_Es[i][j];
-                    const float _eps_W = pre_calculated_eps_Ws[i][j];
-                    const float _eps_N = pre_calculated_eps_Ns[i][j];
-                    const float _eps_S = pre_calculated_eps_Ss[i][j];
+                    register const float _eps_E = pre_calculated_eps_Es[i][j];
+                    register const float _eps_W = pre_calculated_eps_Ws[i][j];
+                    register const float _eps_N = pre_calculated_eps_Ns[i][j];
+                    register const float _eps_S = pre_calculated_eps_Ss[i][j];
 
-                    const float add = (_eps_E * (p[i + 1][j] - p[i][j]) -
+                    register const float add = (_eps_E * (p[i + 1][j] - p[i][j]) -
                            _eps_W * (p[i][j] - p[i - 1][j])) * rdx2 +
                           (_eps_N * (p[i][j + 1] - p[i][j]) -
                            _eps_S * (p[i][j] - p[i][j - 1])) * rdy2 - rhs[i][j];
-                    *res += add * add;
+                    local_res += add * add;
                 }
             }
         }
-        *res = sqrt((*res) / ifull) / p0;
+        *res = sqrt(local_res / ifull) / p0;
 
         /* convergence? */
         if (*res < eps) break;

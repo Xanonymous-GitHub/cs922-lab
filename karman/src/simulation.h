@@ -28,25 +28,25 @@ void compute_rhs(
 );
 
 int poisson(
-    float** p,
-    float** rhs,
-    char** flag,
+    register float** p,
+    register float** rhs,
+    register char** flag,
     int imax,
     int jmax,
-    float delx,
-    float dely,
-    float eps,
-    int itermax,
-    float omega,
+    register float delx,
+    register float dely,
+    register float eps,
+    register int itermax,
+    register float omega,
     float* res,
-    int ifull,
+    register int ifull,
     float pre_calculated_eps_Es[imax + 1][jmax + 1],
     float pre_calculated_eps_Ws[imax + 1][jmax + 1],
     float pre_calculated_eps_Ns[imax + 1][jmax + 1],
     float pre_calculated_eps_Ss[imax + 1][jmax + 1],
-    float rdx2,
-    float rdy2,
-    float beta_2,
+    register float rdx2,
+    register float rdy2,
+    register float beta_2,
     float pre_calculated_beta_mods[imax + 1][jmax + 1]
 );
 
