@@ -66,6 +66,7 @@
         "iomanip": "cpp",
         "stdio.h": "c",
         "alloc.h": "c",
-        "random": "c"
+        "random": "c",
+        "type_traits": "c"
     }
 }
