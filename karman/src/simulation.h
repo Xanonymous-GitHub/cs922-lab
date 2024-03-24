@@ -50,8 +50,17 @@ int poisson(
     register float rdy2,
     register float beta_2,
     float pre_calculated_beta_mods[imax + 1][jmax + 1],
+    float p0,
     MPI_Win win,
     MPI_Comm grid_comm
+);
+
+float _calculate_p0(
+    register float** p,
+    register char** flag,
+    int imax,
+    int jmax,
+    register int ifull
 );
 
 void update_velocity(

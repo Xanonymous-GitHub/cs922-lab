@@ -375,6 +375,10 @@ int main(int argc, char* argv[]) {
                     last_time_record = MPI_Wtime();
                 }
             #endif
+            register float p0 = 0.0;
+            if (rank == 0) {
+                p0 = _calculate_p0(p, flag, imax, jmax, ifluid);
+            }
             itersor = poisson(
                 p, rhs, flag, istart + local_imax, jstart + local_jmax, 
                 istart, jstart, eps,
@@ -383,7 +387,7 @@ int main(int argc, char* argv[]) {
                 _pre_calculated_eps_Ws,
                 _pre_calculated_eps_Ns,
                 _pre_calculated_eps_Ss,
-                rdx2, rdy2, beta_2, _beta_mods,
+                rdx2, rdy2, beta_2, _beta_mods, p0,
                 win, grid_comm
             );
             #if SHOULD_RECORD_TIME

@@ -159,6 +159,28 @@ void _red_black_sor(
     }
 }
 
+float _calculate_p0(
+    register float** p,
+    register char** flag,
+    int imax,
+    int jmax,
+    register int ifull
+) {
+    register float p0 = 0.0;
+
+    /* Calculate sum of squares */
+    for (register int i = 1; i <= imax; i++) {
+        for (register int j = 1; j <= jmax; j++) {
+            if (flag[i][j] & C_F) { p0 += p[i][j] * p[i][j]; }
+        }
+    }
+
+    p0 = sqrt(p0 / ifull);
+    if (p0 < 0.0001) { p0 = 1.0; }
+
+    return p0;
+}
+
 
 /* Red/Black SOR to solve the poisson equation */
 int poisson(
@@ -182,23 +204,11 @@ int poisson(
     register float rdy2,
     register float beta_2,
     float pre_calculated_beta_mods[imax + 1][jmax + 1],
+    float p0,
     MPI_Win win,
     MPI_Comm grid_comm
 ) {
     register int i = 1, j = 1, iter = 0;
-    float p0 = 0.0;
-
-    /* Calculate sum of squares */
-    for (i = 1; i <= imax; i++) {
-        for (j = 1; j <= jmax; j++) {
-            if (flag[i][j] & C_F) { p0 += p[i][j] * p[i][j]; }
-        }
-    }
-
-    MPI_Allreduce(MPI_IN_PLACE, &p0, 1, MPI_FLOAT, MPI_SUM, grid_comm);
-
-    p0 = sqrt(p0 / ifull);
-    if (p0 < 0.0001) { p0 = 1.0; }
 
     /* Red/Black SOR-iteration */
     for (iter = 0; iter < itermax; iter++) {
