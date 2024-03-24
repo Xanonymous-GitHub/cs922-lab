@@ -40,7 +40,6 @@ int poisson(
     register float eps,
     register int itermax,
     register float omega,
-    float* res,
     register int ifull,
     float pre_calculated_eps_Es[imax + 1][jmax + 1],
     float pre_calculated_eps_Ws[imax + 1][jmax + 1],
@@ -50,9 +49,7 @@ int poisson(
     register float rdy2,
     register float beta_2,
     float pre_calculated_beta_mods[imax + 1][jmax + 1],
-    float p0,
-    MPI_Win win,
-    MPI_Comm grid_comm
+    float p0
 );
 
 float _calculate_p0(

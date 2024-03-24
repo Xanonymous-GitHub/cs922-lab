@@ -5,6 +5,7 @@
 #include <string.h>
 #include <getopt.h>
 #include <errno.h>
+#include <assert.h>
 
 #include <mpi.h>
 #include "alloc.h"
@@ -94,7 +95,6 @@ int main(int argc, char* argv[]) {
     register float t, delx, dely;
     register int i, j, itersor = 0, ifluid = 0;
     int ibound = 0;
-    float res;
     register float** u, ** v, ** p, ** rhs, ** f, ** g;
     register char** flag;
     int init_case, iters = 0;
@@ -141,7 +141,9 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    MPI_Init(&argc, &argv);
+    int provided_threads = 0;
+    MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided_threads);
+    assert(MPI_THREAD_MULTIPLE == provided_threads);
 
     int nprocs, rank;
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
@@ -223,6 +225,7 @@ int main(int argc, char* argv[]) {
 
     if (init_case < 0) {
         /* Set initial values if file doesn't exist */
+        #pragma omp parallel for private(i, j) collapse(2)
         for (i = 0; i <= imax + 1; i++) {
             for (j = 0; j <= jmax + 1; j++) {
                 u[i][j] = ui;
@@ -305,150 +308,153 @@ int main(int argc, char* argv[]) {
     int istart = coords[0] * local_imax;
     int jstart = coords[1] * local_jmax;
 
+    MPI_Comm_free(&grid_comm);
+
     printf("rank: %d, local_imax: %d, local_jmax: %d, istart: %d, jstart: %d\n", rank, local_imax, local_jmax, istart, jstart);
 
     float* local_p = malloc(sizeof(float) * local_imax * local_jmax);
 
-    MPI_Win win;
-    MPI_Win_create(
-        local_p, 
-        local_imax * local_jmax * sizeof(float), sizeof(float),
-        MPI_INFO_NULL, 
-        grid_comm, 
-        &win
-    );
-
     /* Main loop */
     for (t = 0.0; t < t_end; t += del_t, iters++) {
         // 3: set_timestep_interval
-        #if SHOULD_RECORD_TIME
-            if (verbose > 1) {
-                last_time_record = MPI_Wtime();
-            }
-        #endif
         if (rank == 0) {
-            set_timestep_interval(&del_t, imax, jmax, delx, dely, u, v, Re, tau);
-        }
-        #if SHOULD_RECORD_TIME
-            if (verbose > 1) {
-                duration_of_3 += MPI_Wtime() - last_time_record;
-            }
-        #endif
-
-        // D: compute_tentative_velocity
-        #if SHOULD_RECORD_TIME
-            if (verbose > 1) {
-                last_time_record = MPI_Wtime();
-            }
-        #endif
-        if (rank == 0) {
-            compute_tentative_velocity(
-                u, v, f, g, flag, 
-                imax, jmax, del_t, delx, dely, gamma, Re
-            );
-        }
-        #if SHOULD_RECORD_TIME
-            if (verbose > 1) {
-                duration_of_4 += MPI_Wtime() - last_time_record;
-            }
-        #endif
-
-        // E: compute_rhs
-        #if SHOULD_RECORD_TIME
-            if (verbose > 1) {
-                last_time_record = MPI_Wtime();
-            }
-        #endif
-        if (rank == 0) {
-            compute_rhs(f, g, rhs, flag, imax, jmax, del_t, delx, dely);
-        }
-        #if SHOULD_RECORD_TIME
-            if (verbose > 1) {
-                duration_of_5 += MPI_Wtime() - last_time_record;
-            }
-        #endif
-
-        if (ifluid > 0) {
-            // F: poisson
             #if SHOULD_RECORD_TIME
                 if (verbose > 1) {
                     last_time_record = MPI_Wtime();
                 }
             #endif
-            register float p0 = 0.0;
+            set_timestep_interval(&del_t, imax, jmax, delx, dely, u, v, Re, tau);
+            #if SHOULD_RECORD_TIME
+                if (verbose > 1) {
+                    duration_of_3 += MPI_Wtime() - last_time_record;
+                }
+            #endif
+        }
+
+        // Sync del_t to ensure the main loop will stop in other processes (rank != 0).
+        MPI_Bcast(&del_t, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
+
+        // D: compute_tentative_velocity
+        if (rank == 0) {
+            #if SHOULD_RECORD_TIME
+                if (verbose > 1) {
+                    last_time_record = MPI_Wtime();
+                }
+            #endif
+            compute_tentative_velocity(
+                u, v, f, g, flag, 
+                imax, jmax, del_t, delx, dely, gamma, Re
+            );
+            #if SHOULD_RECORD_TIME
+                if (verbose > 1) {
+                    duration_of_4 += MPI_Wtime() - last_time_record;
+                }
+            #endif
+        }
+
+        // E: compute_rhs
+        if (rank == 0) {
+            #if SHOULD_RECORD_TIME
+                if (verbose > 1) {
+                    last_time_record = MPI_Wtime();
+                }
+            #endif
+            compute_rhs(f, g, rhs, flag, imax, jmax, del_t, delx, dely);
+            #if SHOULD_RECORD_TIME
+                if (verbose > 1) {
+                    duration_of_5 += MPI_Wtime() - last_time_record;
+                }
+            #endif
+        }
+
+        if (ifluid > 0) {
+            // F: poisson
+            float p0 = 0.0;
             if (rank == 0) {
+                #if SHOULD_RECORD_TIME
+                    if (verbose > 1) {
+                        last_time_record = MPI_Wtime();
+                    }
+                #endif
                 p0 = _calculate_p0(p, flag, imax, jmax, ifluid);
             }
+
+            // broadcast p, p0, rhs to other processes
+            // MPI_Bcast(p[0], (imax + 2) * (jmax + 2), MPI_FLOAT, 0, grid_comm);
+            MPI_Bcast(rhs[0], (imax + 2) * (jmax + 2), MPI_FLOAT, 0, MPI_COMM_WORLD);
+            MPI_Bcast(&p0, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
+
             itersor = poisson(
                 p, rhs, flag, istart + local_imax, jstart + local_jmax, 
                 istart, jstart, eps,
-                itermax, omega, &res, ifluid,
+                itermax, omega, ifluid,
                 _pre_calculated_eps_Es,
                 _pre_calculated_eps_Ws,
                 _pre_calculated_eps_Ns,
                 _pre_calculated_eps_Ss,
-                rdx2, rdy2, beta_2, _beta_mods, p0,
-                win, grid_comm
+                rdx2, rdy2, beta_2, _beta_mods, p0
             );
-            #if SHOULD_RECORD_TIME
-                if (verbose > 1) {
-                    duration_of_6 += MPI_Wtime() - last_time_record;
-                }
-            #endif
+
+            MPI_Barrier(MPI_COMM_WORLD);
+
+            if (rank == 0) {
+                #if SHOULD_RECORD_TIME
+                    if (verbose > 1) {
+                        duration_of_6 += MPI_Wtime() - last_time_record;
+                    }
+                #endif
+            }
         } else {
             itersor = 0;
         }
 
         if (rank == 0 && verbose > 1) {
             printf(
-                "%d t:%g, del_t:%g, SOR iters:%3d, res:%e, bcells:%d\n",
+                "%d t:%g, del_t:%g, SOR iters:%3d, bcells:%d\n",
                 iters,
                 t + del_t,
                 del_t,
                 itersor,
-                res,
                 ibound
             );
         }
 
         // G: update_velocity
-        #if SHOULD_RECORD_TIME
-            if (verbose > 1) {
-                last_time_record = MPI_Wtime();
-            }
-        #endif
         if (rank == 0) {
+            #if SHOULD_RECORD_TIME
+                if (verbose > 1) {
+                    last_time_record = MPI_Wtime();
+                }
+            #endif
             update_velocity(u, v, f, g, p, flag, imax, jmax, del_t, delx, dely);
+            #if SHOULD_RECORD_TIME
+                if (verbose > 1) {
+                    duration_of_7 += MPI_Wtime() - last_time_record;
+                }
+            #endif
         }
-        #if SHOULD_RECORD_TIME
-            if (verbose > 1) {
-                duration_of_7 += MPI_Wtime() - last_time_record;
-            }
-        #endif
 
         // H: apply_boundary_conditions
-        #if SHOULD_RECORD_TIME
-            if (verbose > 1) {
-                last_time_record = MPI_Wtime();
-            }
-        #endif
         if (rank == 0) {
+            #if SHOULD_RECORD_TIME
+                if (verbose > 1) {
+                    last_time_record = MPI_Wtime();
+                }
+            #endif
             apply_boundary_conditions(u, v, flag, imax, jmax, ui, vi);
+            #if SHOULD_RECORD_TIME
+                if (verbose > 1) {
+                    duration_of_8 += MPI_Wtime() - last_time_record;
+                }
+            #endif
         }
-        #if SHOULD_RECORD_TIME
-            if (verbose > 1) {
-                duration_of_8 += MPI_Wtime() - last_time_record;
-            }
-        #endif
+
+        // if (rank != 0) {
+        //     printf("rank: %d\n, t: %f\n", rank, t);
+        // }
     }
 
-    if (win != NULL && win != MPI_WIN_NULL) {
-        MPI_Win_free(&win);
-    }
-
-    if (grid_comm != NULL && grid_comm != MPI_COMM_NULL) {
-        MPI_Comm_free(&grid_comm);
-    }
+    printf("rank: %d\n, t: %f\n", rank, t);
 
     if (outfile != NULL && strcmp(outfile, "") != 0 && rank == 0) {
         write_bin(u, v, p, flag, imax, jmax, xlength, ylength, outfile);

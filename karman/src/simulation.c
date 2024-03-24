@@ -190,8 +190,7 @@ float _calculate_p0(
     return p0;
 }
 
-void _calculate_partial_residual(
-    float* local_res,
+float _calculate_partial_residual(
     register int i,
     register int j,
     register float** p,
@@ -208,7 +207,7 @@ void _calculate_partial_residual(
 ) {
     // only fluid cells
     if (!(flag[i][j] & C_F)) {
-        return;        
+        return 0.0;        
     }
 
     register const float _eps_E = pre_calculated_eps_Es[i][j];
@@ -220,7 +219,7 @@ void _calculate_partial_residual(
             _eps_W * (p[i][j] - p[i - 1][j])) * rdx2 +
             (_eps_N * (p[i][j + 1] - p[i][j]) -
             _eps_S * (p[i][j] - p[i][j - 1])) * rdy2 - rhs[i][j];
-    *local_res += add * add;
+    return add * add;
 }
 
 
@@ -236,7 +235,6 @@ int poisson(
     register float eps,
     register int itermax,
     register float omega,
-    float* res,
     register int ifull,
     float pre_calculated_eps_Es[imax + 1][jmax + 1],
     float pre_calculated_eps_Ws[imax + 1][jmax + 1],
@@ -247,7 +245,6 @@ int poisson(
     register float beta_2,
     float pre_calculated_beta_mods[imax + 1][jmax + 1],
     float p0,
-    MPI_Win win,
     MPI_Comm grid_comm
 ) {
     register int iter = 0;
@@ -269,8 +266,6 @@ int poisson(
             }
         }
 
-        MPI_Win_fence(MPI_MODE_NOPUT + MPI_MODE_NOPRECEDE, win);
-
         for (register int i = istart; i <= imax; i += 1) {
             for (register int j = jstart + 1 + (i % 2); j <= jmax; j += 2) {
                 _red_black_sor(
@@ -285,14 +280,13 @@ int poisson(
             }
         }
 
-        MPI_Win_fence(MPI_MODE_NOSTORE + MPI_MODE_NOSUCCEED, win);
-
         /* Partial computation of residual */
-        float local_res = 0.0, global_res = 0.0;
+        register float local_res = 0.0;
+
+        // SLOWER: #pragma omp parallel for reduction(+:local_res) schedule(static) collapse(2)
         for (register int i = istart; i <= imax; i++) {
             for (register int j = jstart; j <= jmax; j++) {
-                _calculate_partial_residual(
-                    &local_res,
+                local_res += _calculate_partial_residual(
                     i, j, p, rhs, flag, rdx2, rdy2, imax, jmax,
                     pre_calculated_eps_Es, pre_calculated_eps_Ws,
                     pre_calculated_eps_Ns, pre_calculated_eps_Ss
@@ -300,12 +294,8 @@ int poisson(
             }
         }
 
-        MPI_Allreduce(&local_res, &global_res, 1, MPI_FLOAT, MPI_SUM, grid_comm);
-        *res = sqrt(global_res / ifull) / p0;
-
-        /* convergence? */
-        if (*res < eps) break;
-    } /* end of iter */
+        if ((sqrt(local_res / ifull) / p0) < eps) break;
+    }
 
     return iter;
 }
