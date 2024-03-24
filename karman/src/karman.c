@@ -34,7 +34,8 @@ int read_bin(
     int jmax,
     float xlength,
     float ylength,
-    char* file
+    char* file,
+    int rank
 );
 
 static void print_usage(void);
@@ -45,10 +46,7 @@ static void print_help(void);
 
 static char* progname;
 
-int proc = 0;                       /* Rank of the current process */
-int nprocs = 0;                /* Number of processes in communicator */
-
-int* ileft, * iright;           /* Array bounds for each processor */
+int* ileft, * iright;
 
 #define PACKAGE "karman"
 #define VERSION "1.0"
@@ -142,24 +140,40 @@ int main(int argc, char* argv[]) {
                 show_usage = 1;
         }
     }
+
+    MPI_Init(&argc, &argv);
+
+    int nprocs, rank;
+    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
     if (show_usage || optind < argc) {
-        print_usage();
-        return 1;
+        if (rank == 0) {
+            print_usage();
+        }
+
+        MPI_Finalize();
+        return 0;
     }
 
     if (show_version) {
-        print_version();
+        if (rank == 0) {
+            print_version();
+        }
         if (!show_help) {
+            MPI_Finalize();
             return 0;
         }
     }
 
     if (show_help) {
-        print_help();
+        if (rank == 0) {
+            print_help();            
+        }
+
+        MPI_Finalize();
         return 0;
     }
-
-    MPI_Init(&argc, &argv);
 
     delx = xlength / imax;
     dely = ylength / jmax;
@@ -178,13 +192,16 @@ int main(int argc, char* argv[]) {
     flag = alloc_charmatrix(imax + 2, jmax + 2);
 
     if (!u || !v || !f || !g || !p || !rhs || !flag) {
-        fprintf(stderr, "Couldn't allocate memory for matrices.\n");
+        if (rank == 0) {
+            fprintf(stderr, "Couldn't allocate memory for matrices.\n");
+        }
+        
         MPI_Finalize();
         return 1;
     }
 
     /* Read in initial values from a file if it exists */
-    init_case = read_bin(u, v, p, flag, imax, jmax, xlength, ylength, infile);
+    init_case = read_bin(u, v, p, flag, imax, jmax, xlength, ylength, infile, rank);
 
     if (init_case > 0) {
         /* Error while reading file */
@@ -273,6 +290,34 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    int dims[2] = {0, 0};
+    MPI_Dims_create(nprocs, 2, dims);
+
+    int periods[2] = {0, 0}, reorder = 1;
+    MPI_Comm grid_comm;
+    MPI_Cart_create(MPI_COMM_WORLD, 2, dims, periods, reorder, &grid_comm);
+
+    int local_imax = imax / dims[0];
+    int local_jmax = jmax / dims[1];
+
+    int coords[2];
+    MPI_Cart_coords(grid_comm, rank, 2, coords);
+    int istart = coords[0] * local_imax;
+    int jstart = coords[1] * local_jmax;
+
+    printf("rank: %d, local_imax: %d, local_jmax: %d, istart: %d, jstart: %d\n", rank, local_imax, local_jmax, istart, jstart);
+
+    float* local_p = malloc(sizeof(float) * local_imax * local_jmax);
+
+    MPI_Win win;
+    MPI_Win_create(
+        local_p, 
+        local_imax * local_jmax * sizeof(float), sizeof(float),
+        MPI_INFO_NULL, 
+        grid_comm, 
+        &win
+    );
+
     /* Main loop */
     for (t = 0.0; t < t_end; t += del_t, iters++) {
         // 3: set_timestep_interval
@@ -281,7 +326,9 @@ int main(int argc, char* argv[]) {
                 last_time_record = MPI_Wtime();
             }
         #endif
-        set_timestep_interval(&del_t, imax, jmax, delx, dely, u, v, Re, tau);
+        if (rank == 0) {
+            set_timestep_interval(&del_t, imax, jmax, delx, dely, u, v, Re, tau);
+        }
         #if SHOULD_RECORD_TIME
             if (verbose > 1) {
                 duration_of_3 += MPI_Wtime() - last_time_record;
@@ -294,10 +341,12 @@ int main(int argc, char* argv[]) {
                 last_time_record = MPI_Wtime();
             }
         #endif
-        compute_tentative_velocity(
-            u, v, f, g, flag, 
-            imax, jmax, del_t, delx, dely, gamma, Re
-        );
+        if (rank == 0) {
+            compute_tentative_velocity(
+                u, v, f, g, flag, 
+                imax, jmax, del_t, delx, dely, gamma, Re
+            );
+        }
         #if SHOULD_RECORD_TIME
             if (verbose > 1) {
                 duration_of_4 += MPI_Wtime() - last_time_record;
@@ -310,7 +359,9 @@ int main(int argc, char* argv[]) {
                 last_time_record = MPI_Wtime();
             }
         #endif
-        compute_rhs(f, g, rhs, flag, imax, jmax, del_t, delx, dely);
+        if (rank == 0) {
+            compute_rhs(f, g, rhs, flag, imax, jmax, del_t, delx, dely);
+        }
         #if SHOULD_RECORD_TIME
             if (verbose > 1) {
                 duration_of_5 += MPI_Wtime() - last_time_record;
@@ -325,14 +376,15 @@ int main(int argc, char* argv[]) {
                 }
             #endif
             itersor = poisson(
-                p, rhs, flag, imax, 
-                jmax, eps,
+                p, rhs, flag, istart + local_imax, jstart + local_jmax, 
+                istart, jstart, eps,
                 itermax, omega, &res, ifluid,
                 _pre_calculated_eps_Es,
                 _pre_calculated_eps_Ws,
                 _pre_calculated_eps_Ns,
                 _pre_calculated_eps_Ss,
-                rdx2, rdy2, beta_2, _beta_mods
+                rdx2, rdy2, beta_2, _beta_mods,
+                win, grid_comm
             );
             #if SHOULD_RECORD_TIME
                 if (verbose > 1) {
@@ -343,9 +395,16 @@ int main(int argc, char* argv[]) {
             itersor = 0;
         }
 
-        if (proc == 0 && verbose > 1) {
-            printf("%d t:%g, del_t:%g, SOR iters:%3d, res:%e, bcells:%d\n",
-                   iters, t + del_t, del_t, itersor, res, ibound);
+        if (rank == 0 && verbose > 1) {
+            printf(
+                "%d t:%g, del_t:%g, SOR iters:%3d, res:%e, bcells:%d\n",
+                iters,
+                t + del_t,
+                del_t,
+                itersor,
+                res,
+                ibound
+            );
         }
 
         // G: update_velocity
@@ -354,7 +413,9 @@ int main(int argc, char* argv[]) {
                 last_time_record = MPI_Wtime();
             }
         #endif
-        update_velocity(u, v, f, g, p, flag, imax, jmax, del_t, delx, dely);
+        if (rank == 0) {
+            update_velocity(u, v, f, g, p, flag, imax, jmax, del_t, delx, dely);
+        }
         #if SHOULD_RECORD_TIME
             if (verbose > 1) {
                 duration_of_7 += MPI_Wtime() - last_time_record;
@@ -367,15 +428,25 @@ int main(int argc, char* argv[]) {
                 last_time_record = MPI_Wtime();
             }
         #endif
-        apply_boundary_conditions(u, v, flag, imax, jmax, ui, vi);
+        if (rank == 0) {
+            apply_boundary_conditions(u, v, flag, imax, jmax, ui, vi);
+        }
         #if SHOULD_RECORD_TIME
             if (verbose > 1) {
                 duration_of_8 += MPI_Wtime() - last_time_record;
             }
         #endif
-    } /* End of main loop */
+    }
 
-    if (outfile != NULL && strcmp(outfile, "") != 0 && proc == 0) {
+    if (win != NULL && win != MPI_WIN_NULL) {
+        MPI_Win_free(&win);
+    }
+
+    if (grid_comm != NULL && grid_comm != MPI_COMM_NULL) {
+        MPI_Comm_free(&grid_comm);
+    }
+
+    if (outfile != NULL && strcmp(outfile, "") != 0 && rank == 0) {
         write_bin(u, v, p, flag, imax, jmax, xlength, ylength, outfile);
     }
 
@@ -388,7 +459,7 @@ int main(int argc, char* argv[]) {
     free_matrix(flag);
 
     #if SHOULD_RECORD_TIME
-        if (verbose > 1 && proc == 0) {
+        if (verbose > 1 && rank == 0) {
             printf("\n>>> init_flag [1]: %f s\n\n", duration_of_1);
             printf("\n>>> apply_boundary_conditions [2]: %f s\n\n", duration_of_2);
             printf("\n>>> set_timestep_interval [3]: %f s\n\n", duration_of_3);
@@ -422,8 +493,7 @@ void write_bin(
     fp = fopen(file, "wb");
 
     if (fp == NULL) {
-        fprintf(stderr, "Could not open file '%s': %s\n", file,
-                strerror(errno));
+        fprintf(stderr, "Could not open file '%s': %s\n", file, strerror(errno));
         return;
     }
 
@@ -451,7 +521,8 @@ int read_bin(
     int jmax,
     float xlength,
     float ylength,
-    char* file
+    char* file,
+    int rank
 ) {
     int i, j;
     FILE* fp;
@@ -459,9 +530,10 @@ int read_bin(
     if (file == NULL) return -1;
 
     if ((fp = fopen(file, "rb")) == NULL) {
-        fprintf(stderr, "Could not open file '%s': %s\n", file,
-                strerror(errno));
-        fprintf(stderr, "Generating default state instead.\n");
+        if (rank == 0) {
+            fprintf(stderr, "Could not open file '%s': %s\n", file, strerror(errno));
+            fprintf(stderr, "Generating default state instead.\n");
+        }
         return -1;
     }
 
@@ -472,16 +544,20 @@ int read_bin(
     fread(&yl, sizeof(float), 1, fp);
 
     if (i != imax || j != jmax) {
-        fprintf(stderr, "Warning: imax/jmax have wrong values in %s\n", file);
-        fprintf(stderr, "%s's imax = %d, jmax = %d\n", file, i, j);
-        fprintf(stderr, "Program's imax = %d, jmax = %d\n", imax, jmax);
+        if (rank == 0) {
+            fprintf(stderr, "Warning: imax/jmax have wrong values in %s\n", file);
+            fprintf(stderr, "%s's imax = %d, jmax = %d\n", file, i, j);
+            fprintf(stderr, "Program's imax = %d, jmax = %d\n", imax, jmax);
+        }
         return 1;
     }
     if (xl != xlength || yl != ylength) {
-        fprintf(stderr, "Warning: xlength/ylength have wrong values in %s\n", file);
-        fprintf(stderr, "%s's xlength = %g,  ylength = %g\n", file, xl, yl);
-        fprintf(stderr, "Program's xlength = %g, ylength = %g\n", xlength,
-                ylength);
+        if (rank == 0) {
+            fprintf(stderr, "Warning: xlength/ylength have wrong values in %s\n", file);
+            fprintf(stderr, "%s's xlength = %g,  ylength = %g\n", file, xl, yl);
+            fprintf(stderr, "Program's xlength = %g, ylength = %g\n", xlength, ylength);
+        }
+        
         return 1;
     }
 

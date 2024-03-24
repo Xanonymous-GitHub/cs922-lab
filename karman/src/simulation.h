@@ -1,5 +1,7 @@
 #pragma once
 
+#include <mpi.h>
+
 void compute_tentative_velocity(
     float** u,
     float** v,
@@ -33,6 +35,8 @@ int poisson(
     register char** flag,
     int imax,
     int jmax,
+    int istart,
+    int jstart,
     register float eps,
     register int itermax,
     register float omega,
@@ -45,7 +49,9 @@ int poisson(
     register float rdx2,
     register float rdy2,
     register float beta_2,
-    float pre_calculated_beta_mods[imax + 1][jmax + 1]
+    float pre_calculated_beta_mods[imax + 1][jmax + 1],
+    MPI_Win win,
+    MPI_Comm grid_comm
 );
 
 void update_velocity(

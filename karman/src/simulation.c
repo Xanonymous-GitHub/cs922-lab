@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <mpi.h>
 #include "datadef.h"
 #include "init.h"
 
@@ -166,6 +167,8 @@ int poisson(
     register char** flag,
     int imax,
     int jmax,
+    int istart,
+    int jstart,
     register float eps,
     register int itermax,
     register float omega,
@@ -178,10 +181,12 @@ int poisson(
     register float rdx2,
     register float rdy2,
     register float beta_2,
-    float pre_calculated_beta_mods[imax + 1][jmax + 1]
+    float pre_calculated_beta_mods[imax + 1][jmax + 1],
+    MPI_Win win,
+    MPI_Comm grid_comm
 ) {
     register int i = 1, j = 1, iter = 0;
-    register float p0 = 0.0;
+    float p0 = 0.0;
 
     /* Calculate sum of squares */
     for (i = 1; i <= imax; i++) {
@@ -190,14 +195,16 @@ int poisson(
         }
     }
 
+    MPI_Allreduce(MPI_IN_PLACE, &p0, 1, MPI_FLOAT, MPI_SUM, grid_comm);
+
     p0 = sqrt(p0 / ifull);
     if (p0 < 0.0001) { p0 = 1.0; }
 
     /* Red/Black SOR-iteration */
     for (iter = 0; iter < itermax; iter++) {
 
-        for (i = 1; i <= imax; i++) {
-            register int start_j = 2 - (i % 2);
+        for (i = istart; i <= imax; i++) {
+            register int start_j = jstart + 2 - (i % 2);
             for (j = start_j; j <= jmax; j += 2) {
                 _red_black_sor(
                     i, j, p, rhs, flag, imax, jmax, omega, 
@@ -211,8 +218,10 @@ int poisson(
             }
         }
 
-        for (i = 1; i <= imax; i += 1) {
-            register int start_j = 1 + (i % 2);
+        MPI_Win_fence(MPI_MODE_NOPUT + MPI_MODE_NOPRECEDE, win);
+
+        for (i = istart; i <= imax; i += 1) {
+            register int start_j = jstart + 1 + (i % 2);
             for (j = start_j; j <= jmax; j += 2) {
                 _red_black_sor(
                     i, j, p, rhs, flag, imax, jmax, omega, 
@@ -225,11 +234,13 @@ int poisson(
                 );
             }
         }
+
+        MPI_Win_fence(MPI_MODE_NOSTORE + MPI_MODE_NOSUCCEED, win);
 
         /* Partial computation of residual */
-        register float local_res = 0.0;
-        for (i = 1; i <= imax; i++) {
-            for (j = 1; j <= jmax; j++) {
+        float local_res = 0.0, global_res = 0.0;
+        for (i = istart; i <= imax; i++) {
+            for (j = jstart; j <= jmax; j++) {
                 if (flag[i][j] & C_F) {
                     /* only fluid cells */
                     register const float _eps_E = pre_calculated_eps_Es[i][j];
@@ -245,7 +256,9 @@ int poisson(
                 }
             }
         }
-        *res = sqrt(local_res / ifull) / p0;
+
+        MPI_Allreduce(&local_res, &global_res, 1, MPI_FLOAT, MPI_SUM, grid_comm);
+        *res = sqrt(global_res / ifull) / p0;
 
         /* convergence? */
         if (*res < eps) break;
