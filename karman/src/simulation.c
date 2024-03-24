@@ -181,6 +181,39 @@ float _calculate_p0(
     return p0;
 }
 
+void _calculate_partial_residual(
+    float* local_res,
+    register int i,
+    register int j,
+    register float** p,
+    register float** rhs,
+    register char** flag,
+    register float rdx2,
+    register float rdy2,
+    int imax,
+    int jmax,
+    float pre_calculated_eps_Es[imax + 1][jmax + 1],
+    float pre_calculated_eps_Ws[imax + 1][jmax + 1],
+    float pre_calculated_eps_Ns[imax + 1][jmax + 1],
+    float pre_calculated_eps_Ss[imax + 1][jmax + 1]
+) {
+    // only fluid cells
+    if (!(flag[i][j] & C_F)) {
+        return;        
+    }
+
+    register const float _eps_E = pre_calculated_eps_Es[i][j];
+    register const float _eps_W = pre_calculated_eps_Ws[i][j];
+    register const float _eps_N = pre_calculated_eps_Ns[i][j];
+    register const float _eps_S = pre_calculated_eps_Ss[i][j];
+
+    register const float add = (_eps_E * (p[i + 1][j] - p[i][j]) -
+            _eps_W * (p[i][j] - p[i - 1][j])) * rdx2 +
+            (_eps_N * (p[i][j + 1] - p[i][j]) -
+            _eps_S * (p[i][j] - p[i][j - 1])) * rdy2 - rhs[i][j];
+    *local_res += add * add;
+}
+
 
 /* Red/Black SOR to solve the poisson equation */
 int poisson(
@@ -208,14 +241,13 @@ int poisson(
     MPI_Win win,
     MPI_Comm grid_comm
 ) {
-    register int i = 1, j = 1, iter = 0;
+    register int iter = 0;
 
     /* Red/Black SOR-iteration */
     for (iter = 0; iter < itermax; iter++) {
 
-        for (i = istart; i <= imax; i++) {
-            register int start_j = jstart + 2 - (i % 2);
-            for (j = start_j; j <= jmax; j += 2) {
+        for (register int i = istart; i <= imax; i++) {
+            for (register int j = jstart + 2 - (i % 2); j <= jmax; j += 2) {
                 _red_black_sor(
                     i, j, p, rhs, flag, imax, jmax, omega, 
                     rdx2, rdy2, beta_2, 
@@ -230,9 +262,8 @@ int poisson(
 
         MPI_Win_fence(MPI_MODE_NOPUT + MPI_MODE_NOPRECEDE, win);
 
-        for (i = istart; i <= imax; i += 1) {
-            register int start_j = jstart + 1 + (i % 2);
-            for (j = start_j; j <= jmax; j += 2) {
+        for (register int i = istart; i <= imax; i += 1) {
+            for (register int j = jstart + 1 + (i % 2); j <= jmax; j += 2) {
                 _red_black_sor(
                     i, j, p, rhs, flag, imax, jmax, omega, 
                     rdx2, rdy2, beta_2, 
@@ -249,21 +280,14 @@ int poisson(
 
         /* Partial computation of residual */
         float local_res = 0.0, global_res = 0.0;
-        for (i = istart; i <= imax; i++) {
-            for (j = jstart; j <= jmax; j++) {
-                if (flag[i][j] & C_F) {
-                    /* only fluid cells */
-                    register const float _eps_E = pre_calculated_eps_Es[i][j];
-                    register const float _eps_W = pre_calculated_eps_Ws[i][j];
-                    register const float _eps_N = pre_calculated_eps_Ns[i][j];
-                    register const float _eps_S = pre_calculated_eps_Ss[i][j];
-
-                    register const float add = (_eps_E * (p[i + 1][j] - p[i][j]) -
-                           _eps_W * (p[i][j] - p[i - 1][j])) * rdx2 +
-                          (_eps_N * (p[i][j + 1] - p[i][j]) -
-                           _eps_S * (p[i][j] - p[i][j - 1])) * rdy2 - rhs[i][j];
-                    local_res += add * add;
-                }
+        for (register int i = istart; i <= imax; i++) {
+            for (register int j = jstart; j <= jmax; j++) {
+                _calculate_partial_residual(
+                    &local_res,
+                    i, j, p, rhs, flag, rdx2, rdy2, imax, jmax,
+                    pre_calculated_eps_Es, pre_calculated_eps_Ws,
+                    pre_calculated_eps_Ns, pre_calculated_eps_Ss
+                );
             }
         }
 
