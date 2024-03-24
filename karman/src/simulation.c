@@ -111,16 +111,15 @@ void compute_rhs(
     float delx,
     float dely
 ) {
-    int i, j;
-
-    for (i = 1; i <= imax; i++) {
-        for (j = 1; j <= jmax; j++) {
+    #pragma omp parallel for collapse(2) schedule(static)
+    for (register int i = 1; i <= imax; i++) {
+        for (register int j = 1; j <= jmax; j++) {
             if (flag[i][j] & C_F) {
                 /* only for fluid and non-surface cells */
                 rhs[i][j] = (
-                                (f[i][j] - f[i - 1][j]) / delx +
-                                (g[i][j] - g[i][j - 1]) / dely
-                            ) / del_t;
+                    (f[i][j] - f[i - 1][j]) / delx +
+                    (g[i][j] - g[i][j - 1]) / dely
+                ) / del_t;
             }
         }
     }
@@ -178,6 +177,7 @@ float _calculate_p0(
     register float p0 = 0.0;
 
     /* Calculate sum of squares */
+    #pragma omp parallel for reduction(+:p0) schedule(static) collapse(2)
     for (register int i = 1; i <= imax; i++) {
         for (register int j = 1; j <= jmax; j++) {
             if (flag[i][j] & C_F) { p0 += p[i][j] * p[i][j]; }
@@ -327,21 +327,25 @@ void update_velocity(
     float delx,
     float dely
 ) {
-    int i, j;
-
-    for (i = 1; i <= imax - 1; i++) {
-        for (j = 1; j <= jmax; j++) {
-            /* only if both adjacent cells are fluid cells */
-            if ((flag[i][j] & C_F) && (flag[i + 1][j] & C_F)) {
-                u[i][j] = f[i][j] - (p[i + 1][j] - p[i][j]) * del_t / delx;
+    #pragma omp parallel
+    {
+        #pragma omp for collapse(2) schedule(static) nowait
+        for (register int i = 1; i <= imax - 1; i++) {
+            for (register int j = 1; j <= jmax; j++) {
+                /* only if both adjacent cells are fluid cells */
+                if ((flag[i][j] & C_F) && (flag[i + 1][j] & C_F)) {
+                    u[i][j] = f[i][j] - (p[i + 1][j] - p[i][j]) * del_t / delx;
+                }
             }
         }
-    }
-    for (i = 1; i <= imax; i++) {
-        for (j = 1; j <= jmax - 1; j++) {
-            /* only if both adjacent cells are fluid cells */
-            if ((flag[i][j] & C_F) && (flag[i][j + 1] & C_F)) {
-                v[i][j] = g[i][j] - (p[i][j + 1] - p[i][j]) * del_t / dely;
+
+        #pragma omp for collapse(2) schedule(static) nowait
+        for (register int i = 1; i <= imax; i++) {
+            for (register int j = 1; j <= jmax - 1; j++) {
+                /* only if both adjacent cells are fluid cells */
+                if ((flag[i][j] & C_F) && (flag[i][j + 1] & C_F)) {
+                    v[i][j] = g[i][j] - (p[i][j + 1] - p[i][j]) * del_t / dely;
+                }
             }
         }
     }
@@ -363,21 +367,27 @@ void set_timestep_interval(
     float Re,
     float tau
 ) {
-    int i, j;
     float umax, vmax, deltu, deltv, deltRe;
 
     /* del_t satisfying CFL conditions */
     if (tau >= 1.0e-10) { /* else no time stepsize control */
         umax = 1.0e-10;
         vmax = 1.0e-10;
-        for (i = 0; i <= imax + 1; i++) {
-            for (j = 1; j <= jmax + 1; j++) {
-                umax = max(fabs(u[i][j]), umax);
+
+        #pragma omp parallel
+        {
+            #pragma omp for collapse(2) reduction(max:umax) schedule(static)
+            for (register int i = 0; i <= imax + 1; i++) {
+                for (register int j = 1; j <= jmax + 1; j++) {
+                    umax = max(fabs(u[i][j]), umax);
+                }
             }
-        }
-        for (i = 1; i <= imax + 1; i++) {
-            for (j = 0; j <= jmax + 1; j++) {
-                vmax = max(fabs(v[i][j]), vmax);
+
+            #pragma omp for collapse(2) reduction(max:vmax) schedule(static)
+            for (register int i = 1; i <= imax + 1; i++) {
+                for (register int j = 0; j <= jmax + 1; j++) {
+                    vmax = max(fabs(v[i][j]), vmax);
+                }
             }
         }
 
