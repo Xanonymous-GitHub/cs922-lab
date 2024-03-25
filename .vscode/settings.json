@@ -67,6 +67,10 @@
         "stdio.h": "c",
         "alloc.h": "c",
         "random": "c",
-        "type_traits": "c"
+        "type_traits": "c",
+        "compare": "c",
+        "format": "c",
+        "span": "c",
+        "utility": "c"
     }
 }
