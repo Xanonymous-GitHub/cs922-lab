@@ -230,10 +230,10 @@ int poisson(
     register char** flag,
     int imax,
     int jmax,
-    int local_imax,
-    int local_jmax,
-    int istart,
-    int jstart,
+    // int local_imax,
+    // int local_jmax,
+    // int istart,
+    // int jstart,
     register float eps,
     register int itermax,
     register float omega,
@@ -246,28 +246,47 @@ int poisson(
     register float rdy2,
     register float beta_2,
     float pre_calculated_beta_mods[imax + 1][jmax + 1],
-    float p0,
-    int west,
-    int east,
-    int north,
-    int south,
-    MPI_Comm grid_comm,
-    MPI_Win win
+    float p0
+    // int west,
+    // int east,
+    // int north,
+    // int south,
+    // MPI_Comm grid_comm,
+    // MPI_Win win
 ) {
-    MPI_Datatype halo_row, halo_col;
+    // MPI_Datatype halo_row, halo_col;
 
-    MPI_Type_vector(local_jmax, 1, imax + 2, MPI_FLOAT, &halo_col);
-    MPI_Type_contiguous(local_imax, MPI_FLOAT, &halo_row);
-    MPI_Type_commit(&halo_col);
-    MPI_Type_commit(&halo_row);
+    // MPI_Type_vector(local_jmax, 1, imax + 2, MPI_FLOAT, &halo_col);
+    // MPI_Type_contiguous(local_imax, MPI_FLOAT, &halo_row);
+    // MPI_Type_commit(&halo_col);
+    // MPI_Type_commit(&halo_row);
 
     register int iter = 0;
+    MPI_Status status;
+
+    int nprocs, proc;
+    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+    MPI_Comm_rank(MPI_COMM_WORLD, &proc);
 
     /* Red/Black SOR-iteration */
     for (iter = 0; iter < itermax; iter++) {
 
-        for (register int i = istart; i < istart + local_imax; i++) {
-            for (register int j = jstart + 1 - (i % 2); j < jstart + local_jmax; j += 2) {
+        // For 2D (but failed., so commented)
+        // for (register int i = istart; i < istart + local_imax; i++) {
+        //     for (register int j = jstart + 1 - (i % 2); j < jstart + local_jmax; j += 2) {
+        //         _red_black_sor(
+        //             i, j, p, rhs, flag, imax, jmax, omega, 
+        //             rdx2, rdy2, beta_2, 
+        //             pre_calculated_eps_Es, 
+        //             pre_calculated_eps_Ws, 
+        //             pre_calculated_eps_Ns, 
+        //             pre_calculated_eps_Ss,
+        //             pre_calculated_beta_mods
+        //         );
+        //     }
+        // }
+        for (register int i = *ileft; i <= *iright; i++) {
+            for (register int j = 2 - (i % 2); j <= jmax; j += 2) {
                 _red_black_sor(
                     i, j, p, rhs, flag, imax, jmax, omega, 
                     rdx2, rdy2, beta_2, 
@@ -280,10 +299,25 @@ int poisson(
             }
         }
 
-        MPI_Win_fence(0, win);
+        // For 2D (but failed., so commented)
+        // MPI_Win_fence(0, win);
 
-        for (register int i = istart; i < istart + local_imax; i += 1) {
-            for (register int j = jstart + (i % 2); j < jstart + local_jmax; j += 2) {
+        // For 2D (but failed., so commented)
+        // for (register int i = istart; i < istart + local_imax; i += 1) {
+        //     for (register int j = jstart + (i % 2); j < jstart + local_jmax; j += 2) {
+        //         _red_black_sor(
+        //             i, j, p, rhs, flag, imax, jmax, omega, 
+        //             rdx2, rdy2, beta_2, 
+        //             pre_calculated_eps_Es, 
+        //             pre_calculated_eps_Ws, 
+        //             pre_calculated_eps_Ns, 
+        //             pre_calculated_eps_Ss,
+        //             pre_calculated_beta_mods
+        //         );
+        //     }
+        // }
+        for (register int i = *ileft; i <= *iright; i++) {
+            for (register int j = 1 + (i % 2); j <= jmax; j += 2) {
                 _red_black_sor(
                     i, j, p, rhs, flag, imax, jmax, omega, 
                     rdx2, rdy2, beta_2, 
@@ -296,28 +330,39 @@ int poisson(
             }
         }
 
-        // if(proc != nprocs - 1) {
-        //     MPI_Send(&p[*iright][0], jmax + 2, MPI_FLOAT, proc + 1, tag, MPI_COMM_WORLD); 
-        // }
+        if(proc != nprocs - 1) {
+            MPI_Send(&p[*iright][0], jmax + 2, MPI_FLOAT, proc + 1, 0, MPI_COMM_WORLD); 
+        }
 
-        // if(proc > 0) { 
-        //     MPI_Recv(&p[*ileft - 1][0], jmax + 2, MPI_FLOAT, proc - 1, tag, MPI_COMM_WORLD, &status);
-        // }
+        if(proc > 0) { 
+            MPI_Recv(&p[*ileft - 1][0], jmax + 2, MPI_FLOAT, proc - 1, 0, MPI_COMM_WORLD, &status);
+        }
 
-        // if(proc > 0) { 
-        //     MPI_Send(&p[*ileft][0], jmax + 2, MPI_FLOAT, proc - 1, tag, MPI_COMM_WORLD);
-        // }
+        if(proc > 0) { 
+            MPI_Send(&p[*ileft][0], jmax + 2, MPI_FLOAT, proc - 1, 0, MPI_COMM_WORLD);
+        }
 
-        // if(proc != nprocs - 1) { 
-        //     MPI_Recv(&p[*iright + 1][0], jmax + 2, MPI_FLOAT, proc + 1, tag, MPI_COMM_WORLD, &status);
-        // }
+        if(proc != nprocs - 1) { 
+            MPI_Recv(&p[*iright + 1][0], jmax + 2, MPI_FLOAT, proc + 1, 0, MPI_COMM_WORLD, &status);
+        }
 
         /* Partial computation of residual */
         float local_res = 0.0, global_res = 0.0;;
 
+        // // SLOWER: #pragma omp parallel for reduction(+:local_res) schedule(static) collapse(2)
+        // for (register int i = istart; i < istart + local_imax; i++) {
+        //     for (register int j = jstart; j < jstart + local_jmax; j++) {
+        //         local_res += _calculate_partial_residual(
+        //             i, j, p, rhs, flag, rdx2, rdy2, imax, jmax,
+        //             pre_calculated_eps_Es, pre_calculated_eps_Ws,
+        //             pre_calculated_eps_Ns, pre_calculated_eps_Ss
+        //         );
+        //     }
+        // }
+
         // SLOWER: #pragma omp parallel for reduction(+:local_res) schedule(static) collapse(2)
-        for (register int i = istart; i < istart + local_imax; i++) {
-            for (register int j = jstart; j < jstart + local_jmax; j++) {
+        for (register int i = *ileft; i <= *iright; i++) {
+            for (register int j = 1; j <= jmax; j++) {
                 local_res += _calculate_partial_residual(
                     i, j, p, rhs, flag, rdx2, rdy2, imax, jmax,
                     pre_calculated_eps_Es, pre_calculated_eps_Ws,
@@ -326,10 +371,10 @@ int poisson(
             }
         }
 
-        MPI_Allreduce(&local_res, &global_res, 1, MPI_FLOAT, MPI_SUM, grid_comm);
+        MPI_Allreduce(&local_res, &global_res, 1, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
         if ((sqrt(global_res / ifull) / p0) < eps) break;
 
-        MPI_Win_fence(0, win);
+        // MPI_Win_fence(0, win);
 
         // update halo to other processes (north, south, west, east) with non-blocking 1-side communication
         // it actually just perform an exchange of halo rows and columns
@@ -344,18 +389,18 @@ int poisson(
         // 
         // Please see the report for more details.
         //
-        if (north != MPI_PROC_NULL) {
-            // MPI_Sendrecv_replace(&p[istart + local_imax][jstart], 1, halo_row, north, 0, south, 0, grid_comm, MPI_STATUS_IGNORE);
-        }
-        if (south != MPI_PROC_NULL) {
-            // MPI_Sendrecv_replace(&p[istart][jstart], 1, halo_row, south, 0, north, 0, grid_comm, MPI_STATUS_IGNORE);
-        }
-        if (west != MPI_PROC_NULL) {
-            // MPI_Sendrecv_replace(&p[istart][jstart + local_jmax], 1, halo_col, west, 0, east, 0, grid_comm, MPI_STATUS_IGNORE);
-        }
-        if (east != MPI_PROC_NULL) {
-            // MPI_Sendrecv_replace(&p[istart][jstart], 1, halo_col, east, 0, west, 0, grid_comm, MPI_STATUS_IGNORE);
-        }
+        // if (north != MPI_PROC_NULL) {
+        //     // MPI_Sendrecv_replace(&p[istart + local_imax][jstart], 1, halo_row, north, 0, south, 0, grid_comm, MPI_STATUS_IGNORE);
+        // }
+        // if (south != MPI_PROC_NULL) {
+        //     // MPI_Sendrecv_replace(&p[istart][jstart], 1, halo_row, south, 0, north, 0, grid_comm, MPI_STATUS_IGNORE);
+        // }
+        // if (west != MPI_PROC_NULL) {
+        //     // MPI_Sendrecv_replace(&p[istart][jstart + local_jmax], 1, halo_col, west, 0, east, 0, grid_comm, MPI_STATUS_IGNORE);
+        // }
+        // if (east != MPI_PROC_NULL) {
+        //     // MPI_Sendrecv_replace(&p[istart][jstart], 1, halo_col, east, 0, west, 0, grid_comm, MPI_STATUS_IGNORE);
+        // }
 
         // MPI_Win_fence(0, win);
     }
@@ -363,17 +408,16 @@ int poisson(
     // MPI_Type_free(&halo_col);
     // MPI_Type_free(&halo_row);
 
-    // MPI_Gather(&p[*ileft][0], imax / nprocs * (jmax + 2), MPI_FLOAT, &p[*ileft][0], imax / nprocs * (jmax + 2), MPI_FLOAT, tag, MPI_COMM_WORLD);
-    // if(imax % nprocs) {
-    //     if(proc == nprocs - 1) {
-    //         MPI_Send(&p[imax - imax % nprocs + 1][0], imax % nprocs * (jmax + 2), MPI_FLOAT, 0, tag, MPI_COMM_WORLD);
-    //     }
-    //     if(proc == 0) {
-    //         MPI_Recv(&p[imax - imax % nprocs + 1][0], imax % nprocs * (jmax + 2), MPI_FLOAT, nprocs - 1, tag, MPI_COMM_WORLD, &status);
-    //     }
-    // }
-
-    // MPI_Bcast(&p[0][0], (imax + 2) * (jmax + 2), MPI_FLOAT, tag, MPI_COMM_WORLD);
+    MPI_Gather(&p[*ileft][0], imax / nprocs * (jmax + 2), MPI_FLOAT, &p[*ileft][0], imax / nprocs * (jmax + 2), MPI_FLOAT, 0, MPI_COMM_WORLD);
+    if(imax % nprocs) {
+        if(proc == nprocs - 1) {
+            MPI_Send(&p[imax - imax % nprocs + 1][0], imax % nprocs * (jmax + 2), MPI_FLOAT, 0, 0, MPI_COMM_WORLD);
+        }
+        if(proc == 0) {
+            MPI_Recv(&p[imax - imax % nprocs + 1][0], imax % nprocs * (jmax + 2), MPI_FLOAT, nprocs - 1, 0, MPI_COMM_WORLD, &status);
+        }
+    }
+    MPI_Bcast(&p[0][0], (imax + 2) * (jmax + 2), MPI_FLOAT, 0, MPI_COMM_WORLD);
     return iter;
 }
 
