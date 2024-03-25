@@ -26,6 +26,9 @@ fi
 export OMP_NUM_THREADS=$NUM_THREADS
 export OMP_PROC_BIND=spread
 export OMP_PLACES=threads
+export MPIRUN_OPTIONS="-binding "domain=omp:compact" -print-rank-map -envall"
+export KMP_AFFINITY=compact,1,0,granularity=fine
+export I_MPI_HYDRA_BRANCH_COUNT=-1
 
 # Execute the command
-"$BUILD_EXEC" -v 2
+mpirun -n 2 "$BUILD_EXEC" -v 2
