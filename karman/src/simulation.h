@@ -35,6 +35,8 @@ int poisson(
     register char** flag,
     int imax,
     int jmax,
+    int local_imax,
+    int local_jmax,
     int istart,
     int jstart,
     register float eps,
@@ -49,7 +51,13 @@ int poisson(
     register float rdy2,
     register float beta_2,
     float pre_calculated_beta_mods[imax + 1][jmax + 1],
-    float p0
+    float p0,
+    int west,
+    int east,
+    int north,
+    int south,
+    MPI_Comm grid_comm,
+    MPI_Win win
 );
 
 float _calculate_p0(

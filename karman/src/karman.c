@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <getopt.h>
 #include <errno.h>
@@ -142,8 +143,8 @@ int main(int argc, char* argv[]) {
     }
 
     int provided_threads = 0;
-    MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided_threads);
-    assert(MPI_THREAD_MULTIPLE == provided_threads);
+    MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &provided_threads);
+    assert(MPI_THREAD_SERIALIZED == provided_threads);
 
     int nprocs, rank;
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
@@ -300,19 +301,40 @@ int main(int argc, char* argv[]) {
     MPI_Comm grid_comm;
     MPI_Cart_create(MPI_COMM_WORLD, 2, dims, periods, reorder, &grid_comm);
 
-    int local_imax = imax / dims[0];
     int local_jmax = jmax / dims[1];
+    int local_imax = imax / dims[0];
 
     int coords[2];
     MPI_Cart_coords(grid_comm, rank, 2, coords);
-    int istart = coords[0] * local_imax;
-    int jstart = coords[1] * local_jmax;
+    int istart = coords[0] * local_imax + 1;
+    int jstart = coords[1] * local_jmax + 1;
 
-    MPI_Comm_free(&grid_comm);
+    if (verbose > 1 && verbose < 3) {
+        printf("rank: %d, local_imax: %d, local_jmax: %d, istart: %d, jstart: %d\n", rank, local_imax, local_jmax, istart, jstart);
+    }
 
-    printf("rank: %d, local_imax: %d, local_jmax: %d, istart: %d, jstart: %d\n", rank, local_imax, local_jmax, istart, jstart);
+    register const uint64_t size_with_halo = (imax + 2) * (jmax + 2);
 
-    float* local_p = malloc(sizeof(float) * local_imax * local_jmax);
+    MPI_Win win;
+    MPI_Win_create(p, sizeof(float) * size_with_halo, sizeof(float), MPI_INFO_NULL, MPI_COMM_WORLD, &win);
+
+    register const int rx = rank % dims[0];
+    register const int ry = rank / dims[0];
+
+    // determine four neighbors
+    register int west = (ry-1) * dims[0] + rx; if(ry-1 < 0)   west = MPI_PROC_NULL;
+    register int east = (ry+1) * dims[0] + rx; if(ry+1 >= dims[1]) east = MPI_PROC_NULL;
+    register int north = ry * dims[0] + rx-1;    if(rx-1 < 0)   north = MPI_PROC_NULL;
+    register int south = ry * dims[0] + rx+1;    if(rx+1 >= dims[0]) south = MPI_PROC_NULL;
+
+    // decompose the domain
+    // register int offx = rx * local_imax; // offset in x
+    // register int offy = ry * local_jmax; // offset in y
+
+    // print the neighbors
+    if (verbose > 1 && verbose < 3) {
+        printf("rank: %d, north: %d, south: %d, west: %d, east: %d\n", rank, north, south, west, east);
+    }
 
     /* Main loop */
     for (t = 0.0; t < t_end; t += del_t, iters++) {
@@ -381,21 +403,25 @@ int main(int argc, char* argv[]) {
 
             // broadcast p, p0, rhs to other processes
             // MPI_Bcast(p[0], (imax + 2) * (jmax + 2), MPI_FLOAT, 0, grid_comm);
-            MPI_Bcast(rhs[0], (imax + 2) * (jmax + 2), MPI_FLOAT, 0, MPI_COMM_WORLD);
-            MPI_Bcast(&p0, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
+            MPI_Bcast(rhs[0], (imax + 2) * (jmax + 2), MPI_FLOAT, 0, grid_comm);
+            MPI_Bcast(&p0, 1, MPI_FLOAT, 0, grid_comm);
 
+            MPI_Win_fence(0, win);
+            
             itersor = poisson(
-                p, rhs, flag, istart + local_imax, jstart + local_jmax, 
+                p, rhs, flag, imax, jmax, local_imax, local_jmax,
                 istart, jstart, eps,
                 itermax, omega, ifluid,
                 _pre_calculated_eps_Es,
                 _pre_calculated_eps_Ws,
                 _pre_calculated_eps_Ns,
                 _pre_calculated_eps_Ss,
-                rdx2, rdy2, beta_2, _beta_mods, p0
+                rdx2, rdy2, beta_2, _beta_mods, p0,
+                west, east, north, south,
+                grid_comm, win
             );
 
-            MPI_Barrier(MPI_COMM_WORLD);
+            MPI_Barrier(grid_comm);
 
             if (rank == 0) {
                 #if SHOULD_RECORD_TIME
@@ -408,7 +434,7 @@ int main(int argc, char* argv[]) {
             itersor = 0;
         }
 
-        if (rank == 0 && verbose > 1) {
+        if (rank == 0 && verbose > 1 && verbose < 3) {
             printf(
                 "%d t:%g, del_t:%g, SOR iters:%3d, bcells:%d\n",
                 iters,
@@ -448,13 +474,7 @@ int main(int argc, char* argv[]) {
                 }
             #endif
         }
-
-        // if (rank != 0) {
-        //     printf("rank: %d\n, t: %f\n", rank, t);
-        // }
     }
-
-    printf("rank: %d\n, t: %f\n", rank, t);
 
     if (outfile != NULL && strcmp(outfile, "") != 0 && rank == 0) {
         write_bin(u, v, p, flag, imax, jmax, xlength, ylength, outfile);
@@ -480,6 +500,14 @@ int main(int argc, char* argv[]) {
             printf("\n>>> apply_boundary_conditions [8]: %f s\n\n", duration_of_8);
         }
     #endif
+
+    if (grid_comm != NULL && grid_comm != MPI_COMM_NULL) {
+        MPI_Comm_free(&grid_comm);
+    }
+
+    if (win != NULL && win != MPI_WIN_NULL) {
+        MPI_Win_free(&win);
+    }
 
     MPI_Finalize();
     return 0;
